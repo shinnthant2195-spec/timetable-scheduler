@@ -14,10 +14,12 @@ import java.util.List;
 public interface TeacherMapper {
 
     @Mapping(target = "teacherSubjects", ignore = true)
+    @Mapping(target = "department",  ignore = true)
     Teacher createTeacherFromDto(TeacherCreationDTO dto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "teacherSubjects", source = "subjectIds", ignore = true)
+    @Mapping(target = "department", ignore = true)
     void updateTeacherFromDto(TeacherEditDTO dto, @MappingTarget Teacher teacher);
 
     @Mapping(source = "teacherSubjects", target = "subjects", qualifiedByName = "mapTeacherSubjectsToDTOs")

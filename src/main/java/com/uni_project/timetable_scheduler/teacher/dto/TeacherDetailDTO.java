@@ -16,6 +16,7 @@ public record TeacherDetailDTO(
         Teacher.TeacherType teacherType,
         String phoneContact,
         String email,
-        String address
+        String address,
+        String department
 ) {
 }

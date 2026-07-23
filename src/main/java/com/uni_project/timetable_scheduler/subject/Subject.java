@@ -1,13 +1,9 @@
 package com.uni_project.timetable_scheduler.subject;
 
-import com.uni_project.timetable_scheduler.major.Major;
 import com.uni_project.timetable_scheduler.teacher.TeacherSubject;
 import jakarta.persistence.*;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 public class Subject {
@@ -36,27 +32,17 @@ public class Subject {
     @Column(name = "is_lab_sub", nullable = false)
     private Boolean isLabSubject;
 
-    // The Enterprise pivot: Subject dictates the Majors for Compound classes
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "subject_major",
-            joinColumns = @JoinColumn(name = "subject_id"),
-            inverseJoinColumns = @JoinColumn(name = "major_id")
-    )
-    private Set<Major> majors = new HashSet<>();
-
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeacherSubject> teacherSubjects = new ArrayList<>();
 
     public Subject() {}
 
-    public Subject(String subjectCode, String name, Integer totalWeeklyPeriod, SubjectType subjectType, Boolean isLabSubject, Set<Major> majors) {
+    public Subject(String subjectCode, String name, Integer totalWeeklyPeriod, SubjectType subjectType, Boolean isLabSubject) {
         this.subjectCode = subjectCode;
         this.name = name;
         this.totalWeeklyPeriod = totalWeeklyPeriod;
         this.subjectType = subjectType;
         this.isLabSubject = isLabSubject;
-        this.majors = majors;
     }
 
     public Integer getId() {
@@ -105,14 +91,6 @@ public class Subject {
 
     public void setLabSubject(Boolean labSubject) {
         isLabSubject = labSubject;
-    }
-
-    public Set<Major> getMajors() {
-        return majors;
-    }
-
-    public void setMajors(Set<Major> majors) {
-        this.majors = majors;
     }
 
     public List<TeacherSubject> getTeacherSubjects() {

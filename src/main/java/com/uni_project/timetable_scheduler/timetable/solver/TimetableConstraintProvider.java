@@ -33,7 +33,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     // ==========================================
 
     private Constraint roomCapacity(ConstraintFactory factory) {
-        return factory.forEach(TimetableSlot.class)
+        return factory.forEach(TimeSlot.class)
                 .filter(slot -> slot.getSession().totalStudent() > slot.getRoom().capacity())
                 .penalize(HardSoftScore.ONE_HARD,
                         slot -> slot.getSession().totalStudent() - slot.getRoom().capacity())
@@ -41,7 +41,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     }
 
     private Constraint labRoomRequired(ConstraintFactory factory) {
-        return factory.forEach(TimetableSlot.class)
+        return factory.forEach(TimeSlot.class)
                 .filter(slot -> Boolean.TRUE.equals(slot.getSubject().isLabSubject()) &&
                         slot.getRoom().roomType() != Room.RoomType.LAB)
                 .penalize(HardSoftScore.ONE_HARD)
@@ -49,31 +49,31 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     }
 
     private Constraint teacherConflict(ConstraintFactory factory) {
-        return factory.forEachUniquePair(TimetableSlot.class,
-                Joiners.equal(TimetableSlot::getTeacher),
-                Joiners.equal(TimetableSlot::getTimeslot))
+        return factory.forEachUniquePair(TimeSlot.class,
+                Joiners.equal(TimeSlot::getTeacher),
+                Joiners.equal(TimeSlot::getTimeslot))
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("Teacher double-booking");
     }
 
     private Constraint sessionConflict(ConstraintFactory factory) {
-        return factory.forEachUniquePair(TimetableSlot.class,
-                Joiners.equal(TimetableSlot::getSession),
-                Joiners.equal(TimetableSlot::getTimeslot))
+        return factory.forEachUniquePair(TimeSlot.class,
+                Joiners.equal(TimeSlot::getSession),
+                Joiners.equal(TimeSlot::getTimeslot))
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("Session double-booking");
     }
 
     private Constraint roomConflict(ConstraintFactory factory) {
-        return factory.forEachUniquePair(TimetableSlot.class,
-                Joiners.equal(TimetableSlot::getRoom),
-                Joiners.equal(TimetableSlot::getTimeslot))
+        return factory.forEachUniquePair(TimeSlot.class,
+                Joiners.equal(TimeSlot::getRoom),
+                Joiners.equal(TimeSlot::getTimeslot))
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("Room  double-booking");
     }
 
     private Constraint teacherUnavailable(ConstraintFactory factory) {
-        return factory.forEach(TimetableSlot.class)
+        return factory.forEach(TimeSlot.class)
                 .filter(slot -> slot.getTeacher().unavailableTimeslotIds().contains(slot.getTeacher().id()))
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("Teacher unavailable for this timeslot");
@@ -84,9 +84,9 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     // ================================
 
     private Constraint partTimeTeacherCompression(ConstraintFactory factory) {
-        return factory.forEach(TimetableSlot.class)
+        return factory.forEach(TimeSlot.class)
                 .filter(slot -> slot.getTeacher().teacherType() == Teacher.TeacherType.PART_TIME)
-                .groupBy(TimetableSlot::getTeacher,
+                .groupBy(TimeSlot::getTeacher,
                         slot -> slot.getTimeslot().dayOfWeek(),
                         ConstraintCollectors.toList())
                 .penalize(HardSoftScore.ONE_SOFT,
@@ -95,8 +95,8 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     }
 
     private Constraint studentClassCompression(ConstraintFactory factory) {
-        return factory.forEach(TimetableSlot.class)
-                .groupBy(TimetableSlot::getSession,
+        return factory.forEach(TimeSlot.class)
+                .groupBy(TimeSlot::getSession,
                         slot -> slot.getTimeslot().dayOfWeek(),
                         ConstraintCollectors.toList())
                 .penalize(HardSoftScore.ONE_SOFT,
@@ -105,9 +105,9 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     }
 
     private Constraint subjectFatigue(ConstraintFactory factory) {
-        return factory.forEach(TimetableSlot.class)
-                .groupBy(TimetableSlot::getSession,
-                        TimetableSlot::getSubject,
+        return factory.forEach(TimeSlot.class)
+                .groupBy(TimeSlot::getSession,
+                        TimeSlot::getSubject,
                         slot -> slot.getTimeslot().dayOfWeek(),
                         ConstraintCollectors.count())
                 .filter((session, subject, day, count) -> count > 3)
@@ -117,15 +117,15 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     }
 
     private Constraint roomStability(ConstraintFactory factory) {
-        return factory.forEachUniquePair(TimetableSlot.class,
-                Joiners.equal(TimetableSlot::getSession),
+        return factory.forEachUniquePair(TimeSlot.class,
+                Joiners.equal(TimeSlot::getSession),
                 Joiners.equal(slot -> slot.getTimeslot().dayOfWeek()))
                 .filter((slot1, slot2) -> slot1.getRoom() != slot2.getRoom())
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("Room stability for students");
     }
 
-    private int calculateGaps(List<TimetableSlot> slots) {
+    private int calculateGaps(List<TimeSlot> slots) {
         if (slots.size() <= 1) return 0;
 
         int minIndex = slots.stream().mapToInt(s -> s.getTimeslot().periodIndex()).min().orElse(0);

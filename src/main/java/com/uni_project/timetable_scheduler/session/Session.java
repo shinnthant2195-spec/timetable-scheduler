@@ -1,7 +1,12 @@
 package com.uni_project.timetable_scheduler.session;
 
 import com.uni_project.timetable_scheduler.major.Major;
+import com.uni_project.timetable_scheduler.subject.Subject;
 import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Session {
@@ -17,6 +22,14 @@ public class Session {
     private Major major;
 
     private Integer totalStudent;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "session_subject",
+            joinColumns = @JoinColumn(name = "session_id"),
+            inverseJoinColumns = @JoinColumn(name = "subject_id")
+    )
+    private Set<Subject> subjects = new HashSet<>();
 
     public Session() {}
 
@@ -56,5 +69,13 @@ public class Session {
 
     public void setTotalStudent(Integer totalStudent) {
         this.totalStudent = totalStudent;
+    }
+
+    public Set<Subject> getSubjects() {
+        return subjects;
+    }
+
+    public void setSubjects(Set<Subject> subjects) {
+        this.subjects = subjects;
     }
 }

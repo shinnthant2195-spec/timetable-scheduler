@@ -11,8 +11,10 @@ import org.mapstruct.ReportingPolicy;
 public interface SessionMapper {
 
     @Mapping(target = "major", ignore = true)
+    @Mapping(target = "subjects", ignore = true)
     Session createSessionFromDTO(SessionCreationDTO dto);
 
     @Mapping(target = "major", ignore = true)
+    @Mapping(target = "subjects", ignore = true)
     void updateSessionFromDTO(SessionCreationDTO dto, @MappingTarget Session session);
 }

@@ -4,6 +4,6 @@ public record TeacherSummaryDTO(
     String profileUrl,
     String id,
     String name,
-    String subjects
+    String department
 ) {
 }

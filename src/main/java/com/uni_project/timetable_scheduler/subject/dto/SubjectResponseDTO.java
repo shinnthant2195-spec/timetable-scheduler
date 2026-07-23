@@ -6,7 +6,6 @@ public record SubjectResponseDTO(
         String name,
         String subjectType,
         Boolean isLabSubject,
-        String majors,
         Integer totalWeeklyPeriod
 ) {
 }

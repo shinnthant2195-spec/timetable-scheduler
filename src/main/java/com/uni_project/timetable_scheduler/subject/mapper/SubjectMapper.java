@@ -8,7 +8,6 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SubjectMapper {
 
-    @Mapping(target = "majors", ignore = true)
     @Mapping(target = "labSubject", source = "isLabSubject")
     Subject createSubjectFromDTO(SubjectRequestDTO dto);
 

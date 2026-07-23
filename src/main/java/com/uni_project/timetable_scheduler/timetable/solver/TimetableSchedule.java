@@ -23,14 +23,14 @@ public class TimetableSchedule {
     private List<RoomFact> rooms;
 
     @PlanningEntityCollectionProperty
-    private List<TimetableSlot> slots;
+    private List<TimeSlot> slots;
 
     @PlanningScore
     private HardSoftScore score;
 
     public TimetableSchedule() {}
 
-    public TimetableSchedule(List<TimetableSlot> slots, List<RoomFact> rooms, List<TimeslotFact> timeslots) {
+    public TimetableSchedule(List<TimeSlot> slots, List<RoomFact> rooms, List<TimeslotFact> timeslots) {
         this.slots = slots;
         this.rooms = rooms;
         this.timeslots = timeslots;
@@ -52,11 +52,11 @@ public class TimetableSchedule {
         this.rooms = rooms;
     }
 
-    public List<TimetableSlot> getSlots() {
+    public List<TimeSlot> getSlots() {
         return slots;
     }
 
-    public void setSlots(List<TimetableSlot> slots) {
+    public void setSlots(List<TimeSlot> slots) {
         this.slots = slots;
     }
 

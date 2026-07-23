@@ -6,7 +6,7 @@ import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
 import com.uni_project.timetable_scheduler.timetable.solver.fact.*;
 
 @PlanningEntity
-public class TimetableSlot {
+public class TimeSlot {
 
     @PlanningId
     private Long id;
@@ -21,9 +21,9 @@ public class TimetableSlot {
     @PlanningVariable(valueRangeProviderRefs = "roomRange")
     private RoomFact room;
 
-    public TimetableSlot() {}
+    public TimeSlot() {}
 
-    public TimetableSlot(Long id, SessionFact session, SubjectFact subject, TeacherFact teacher) {
+    public TimeSlot(Long id, SessionFact session, SubjectFact subject, TeacherFact teacher) {
         this.id = id;
         this.session = session;
         this.subject = subject;

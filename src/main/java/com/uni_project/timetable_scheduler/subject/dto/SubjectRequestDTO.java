@@ -9,7 +9,6 @@ public record SubjectRequestDTO(
         String name,
         Integer totalWeeklyPeriod,
         Subject.SubjectType subjectType,
-        Boolean isLabSubject,
-        List<String> majorIds
+        Boolean isLabSubject
 ) {
 }

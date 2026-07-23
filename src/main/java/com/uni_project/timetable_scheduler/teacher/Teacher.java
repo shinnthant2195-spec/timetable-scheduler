@@ -1,5 +1,6 @@
 package com.uni_project.timetable_scheduler.teacher;
 
+import com.uni_project.timetable_scheduler.department.Department;
 import com.uni_project.timetable_scheduler.subject.Subject;
 import jakarta.persistence.*;
 import org.hibernate.annotations.BatchSize;
@@ -54,6 +55,10 @@ public class Teacher {
 
     @Column(nullable = false)
     private String address;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     public Teacher() {}
 
@@ -165,5 +170,13 @@ public class Teacher {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 }

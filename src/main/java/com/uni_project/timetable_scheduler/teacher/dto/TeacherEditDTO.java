@@ -12,6 +12,7 @@ public record TeacherEditDTO(
         Teacher.TeacherType teacherType,
         String phoneContact,
         String email,
-        String address
+        String address,
+        Integer department
 ) {
 }

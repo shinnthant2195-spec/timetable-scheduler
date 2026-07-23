@@ -8,7 +8,7 @@ import java.util.List;
 
 public class TeacherSpecification {
     public static Specification<Teacher> filterTeacher(
-            Integer subjectId, Integer majorId, Teacher.Gender gender, Teacher.TeacherType teacherType
+            Integer subjectId, Integer departmentId, Integer majorId, Teacher.Gender gender, Teacher.TeacherType teacherType
     ){
         return (root, query, cb) -> {
 
@@ -16,6 +16,10 @@ public class TeacherSpecification {
 
             if (subjectId != null) {
                 predicates.add(cb.equal(root.join("teacherSubjects").join("subject").get("id"), subjectId));
+            }
+
+            if (departmentId != null) {
+                predicates.add(cb.equal(root.get("department").get("id"), departmentId));
             }
 
             if (majorId != null) {

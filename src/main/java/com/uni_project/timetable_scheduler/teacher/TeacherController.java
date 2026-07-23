@@ -25,6 +25,7 @@ public class TeacherController {
     @GetMapping
     public ResponseEntity<Page<TeacherSummaryDTO>> getTeacherSummaries(
             @RequestParam(required = false) Integer subjectId,
+            @RequestParam(required = false) Integer departmentId,
             @RequestParam(required = false) Integer majorId,
             @RequestParam(required = false) Teacher.Gender gender,
             @RequestParam(required = false) Teacher.TeacherType teacherType,
@@ -34,7 +35,7 @@ public class TeacherController {
             @RequestParam(defaultValue = "15") Integer size
     ) {
         return ResponseEntity.ok(teacherService.getTeacherSummaries(
-                subjectId, majorId, gender, teacherType, sortBy, sortDir, page, size
+                subjectId, departmentId, majorId, gender, teacherType, sortBy, sortDir, page, size
         ));
     }
 

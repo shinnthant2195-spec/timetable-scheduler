@@ -38,26 +38,14 @@ public class SubjectService {
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Subject> subjectPage = subjectRepo.findAll(pageable);
 
-        return subjectPage.map(s -> {
-            String majorStr = s.getMajors().stream()
-                    .map(Major::getName)
-                    .distinct()
-                    .collect(Collectors.joining(", "));
-
-            if (majorStr.isEmpty()) {
-                majorStr = "Unassigned";
-            }
-
-            return new SubjectResponseDTO(
-                    s.getId(),
-                    s.getSubjectCode(),
-                    s.getName(),
-                    s.getSubjectType().name(),
-                    s.getLabSubject(),
-                    majorStr,
-                    s.getTotalWeeklyPeriod()
-            );
-        });
+        return subjectPage.map(s -> new SubjectResponseDTO(
+                s.getId(),
+                s.getSubjectCode(),
+                s.getName(),
+                s.getSubjectType().name(),
+                s.getLabSubject(),
+                s.getTotalWeeklyPeriod()
+        ));
     }
 
     public List<SubjectLabelDTO> findAllSubjectLabels() {
@@ -67,19 +55,11 @@ public class SubjectService {
     @Transactional
     public Subject addSubject(SubjectRequestDTO dto) {
         Subject subject = subjectMapper.createSubjectFromDTO(dto);
-
-        Set<Major> majors = dto.majorIds().stream()
-                .map(id -> majorRepo.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Major with id " + id + " not found")))
-                .collect(Collectors.toSet());
-
-        subject.setMajors(majors);
         return subjectRepo.save(subject);
     }
 
     @Transactional
     public void deleteSubject(Integer id) {
-
         subjectRepo.deleteById(id);
     }
 
@@ -89,13 +69,6 @@ public class SubjectService {
                         .orElseThrow(() -> new RuntimeException("Major with id " + id + " not found"));
 
         subjectMapper.updateSubjectFromDTO(dto, s);
-
-        Set<Major> majors = dto.majorIds().stream()
-                .map(majorId -> majorRepo.findById(majorId)
-                        .orElseThrow(() -> new RuntimeException("Major with id " + id + " not found")))
-                .collect(Collectors.toSet());
-
-        s.setMajors(majors);
         return subjectRepo.save(s);
     }
 

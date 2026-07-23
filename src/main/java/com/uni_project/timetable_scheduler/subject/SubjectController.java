@@ -30,7 +30,7 @@ public class SubjectController {
         return ResponseEntity.ok(subjectService.findAllSubjects(sortBy, sortDir, page, size));
     }
 
-    // This is specifically for use in teacher registration's subject drop-down option
+    // This is specifically for use in teacher registration's subject drop-down options
     @GetMapping("/label")
     public ResponseEntity<List<SubjectLabelDTO>> getAllSubjectsByMajor() {
         return ResponseEntity.ok(subjectService.findAllSubjectLabels());

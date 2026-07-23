@@ -1,5 +1,6 @@
 package com.uni_project.timetable_scheduler.teacher;
 
+import com.uni_project.timetable_scheduler.department.DepartmentRepository;
 import com.uni_project.timetable_scheduler.storage.CloudStorageService;
 import com.uni_project.timetable_scheduler.subject.SubjectRepository;
 import com.uni_project.timetable_scheduler.teacher.dto.TeacherCreationDTO;
@@ -28,17 +29,25 @@ public class TeacherService {
     private final TeacherMapper teacherMapper;
     private final SubjectRepository subjectRepo;
     private final CloudStorageService cloudStorageService;
+    private final DepartmentRepository departmentRepo;
 
-    public TeacherService(TeacherRepository teacherRepository, TeacherMapper teacherMapper,  SubjectRepository subjectRepo,  CloudStorageService cloudStorageService) {
+    public TeacherService(
+            TeacherRepository teacherRepository,
+            TeacherMapper teacherMapper,
+            SubjectRepository subjectRepo,
+            CloudStorageService cloudStorageService,
+            DepartmentRepository departmentRepo
+    ) {
         this.teacherRepo = teacherRepository;
         this.teacherMapper = teacherMapper;
         this.subjectRepo = subjectRepo;
         this.cloudStorageService = cloudStorageService;
+        this.departmentRepo = departmentRepo;
     }
 
     @Transactional(readOnly = true)
     public Page<TeacherSummaryDTO> getTeacherSummaries(
-            Integer subjectId, Integer majorId, Teacher.Gender gender, Teacher.TeacherType teacherType,
+            Integer subjectId, Integer departmentId, Integer majorId, Teacher.Gender gender, Teacher.TeacherType teacherType,
             String sortBy, String sortDir, Integer page, Integer size) {
 
         Sort sort = Sort.by(sortDir.equalsIgnoreCase("asc")
@@ -46,10 +55,12 @@ public class TeacherService {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        var spec = TeacherSpecification.filterTeacher(subjectId, majorId, gender, teacherType);
+        var spec = TeacherSpecification.filterTeacher(subjectId, departmentId, majorId, gender, teacherType);
 
         Page<Teacher> teacherPage = teacherRepo.findAll(spec, pageable);
 
+        /*
+        // Previous returning teacher Page.
         return teacherPage.map(t -> {
             String subjectStr = t.getTeacherSubjects().stream()
                     .map(ts -> ts.getSubject().getSubjectCode())
@@ -63,6 +74,14 @@ public class TeacherService {
                     subjectStr
             );
         });
+         */
+
+        return teacherPage.map(t -> new  TeacherSummaryDTO(
+                t.getProfileUrl(),
+                t.getId(),
+                t.getName(),
+                t.getDepartment() != null? t.getDepartment().getName() : "Unassigned"
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -86,6 +105,8 @@ public class TeacherService {
                 teacher.addSubject(subjectRepo.getReferenceById(id));
             });
         }
+
+        if (dto.department() != null) teacher.setDepartment(departmentRepo.getReferenceById(dto.department()));
         return teacherRepo.save(teacher);
     }
 
@@ -117,6 +138,9 @@ public class TeacherService {
         incomingSubjectIds.stream()
                 .filter(s -> !existingSubjectIds.contains(s))
                 .forEach(subId -> teacher.addSubject(subjectRepo.getReferenceById(subId)));
+
+        // Set new department
+        if (dto.department() != null)  teacher.setDepartment(departmentRepo.getReferenceById(dto.department()));
 
         return teacherRepo.save(teacher);
     }
