@@ -1,6 +1,7 @@
 package com.uni_project.timetable_scheduler.session;
 
 import com.uni_project.timetable_scheduler.session.dto.SessionCreationDTO;
+import com.uni_project.timetable_scheduler.session.dto.SessionResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class SessionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Session>> getAllSessions() {
+    public ResponseEntity<List<SessionResponseDTO>> getAllSessions() {
         return ResponseEntity.ok(sessionService.getAllSessions());
     }
 

@@ -1,0 +1,748 @@
+/* Page Wrapper */
+.teacher-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+}
+
+/* Global Action Bar */
+.global-action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+/* Layout Container */
+.teacher-view-container {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    height: 100%;
+}
+
+/* Master Table Section */
+.table-section {
+    flex: 1;
+    min-width: 0; 
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    padding: 24px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.table-header h2 {
+    font-size: 20px;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.table-header p {
+    color: #6B7280;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Search Bar (Updated for SVG) */
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: #9CA3AF;
+}
+
+.search-wrapper input {
+    padding: 10px 12px 10px 36px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 280px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-wrapper input:focus {
+    border-color: #8B5CF6; 
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #8B5CF6;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #7C3AED;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #374151;
+    border: 1px solid #E5E7EB;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: #F9FAFB;
+}
+
+/* Table Styling */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.data-table th {
+    background-color: white;
+    color: #6B7280;
+    font-weight: 500;
+    font-size: 13px;
+    text-transform: capitalize;
+    padding: 12px 16px;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.data-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.data-table th.sortable:hover {
+    color: #111827;
+}
+
+.sort-icon {
+    margin-left: 4px;
+    font-size: 12px;
+}
+
+.sort-icon.inactive {
+    color: #D1D5DB;
+}
+
+.sort-icon.active {
+    color: #8B5CF6;
+    font-weight: bold;
+}
+
+.data-table td {
+    padding: 16px;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 14px;
+    color: #374151;
+    vertical-align: middle;
+    cursor: pointer; 
+}
+
+.data-table tr:hover td {
+    background-color: #F9FAFB;
+}
+
+/* Selected Row Highlight */
+.data-table tr.selected-row td {
+    background-color: #F5F3FF; 
+    color: #6D28D9;
+}
+
+.data-table tr.selected-row td.text-muted {
+    color: #8B5CF6;
+}
+
+/* Avatars */
+.table-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-placeholder, .detail-avatar-placeholder {
+    background-color: #E0E7FF;
+    color: #4F46E5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 50%;
+}
+
+.avatar-placeholder {
+    width: 36px;
+    height: 36px;
+}
+
+.fw-500 {
+    font-weight: 500;
+}
+
+.text-muted {
+    font-size: 13px;
+    color: #6B7280;
+}
+
+/* -------------------------------------
+   RIGHT PANEL: Detail Inspector
+-------------------------------------- */
+.detail-section {
+    width: 340px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    padding: 24px;
+    position: sticky;
+    top: 24px; 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.close-panel-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #9CA3AF;
+    cursor: pointer;
+}
+
+.close-panel-btn:hover {
+    color: #111827;
+}
+
+.detail-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #E5E7EB;
+    margin-bottom: 24px;
+}
+
+.detail-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 3px solid #F5F3FF;
+}
+
+.detail-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.detail-header h3 {
+    font-size: 18px;
+    color: #111827;
+    margin: 0 0 4px 0;
+}
+
+.detail-id {
+    font-size: 13px;
+    color: #6B7280;
+}
+
+/* Detail Body Information */
+.info-block {
+    margin-bottom: 24px;
+}
+
+.info-block h4 {
+    font-size: 14px;
+    color: #111827;
+    margin: 0 0 12px 0;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 16px; /* Row gap 20px, Column gap 16px */
+    margin-bottom: 24px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-item label, .info-block label {
+    font-size: 12px;
+    color: #9CA3AF;
+    font-weight: 500;
+}
+
+/* Enterprise Copy Buttons */
+.copyable-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.copyable-field span {
+    font-size: 13px;
+    color: #111827;
+    font-weight: 500;
+}
+
+.copy-btn {
+    background: none;
+    border: none;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #9CA3AF;
+    border-radius: 4px;
+    transition: all 0.2s;
+    opacity: 0.5; /* Keeps it subtle until hovered */
+}
+
+.copyable-field:hover .copy-btn {
+    opacity: 1;
+}
+
+.copy-btn:hover {
+    background-color: #F3F4F6;
+    color: #374151;
+}
+
+.check-icon {
+    color: #10B981; /* Emerald green for success */
+}
+
+/* Truncation */
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px; /* Ensures long emails don't break the grid */
+}
+
+.full-width-info {
+    font-size: 13px;
+    color: #111827;
+    font-weight: 500;
+    display: block;
+    margin-top: 4px;
+}
+
+.subject-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.subject-tag {
+    background: #F3F4F6;
+    color: #374151;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-weight: 500;
+}
+
+.loading-state, .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6B7280;
+    font-size: 14px;
+}
+
+/* Table Action Buttons */
+.action-cell {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.action-icon-btn {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.action-icon-btn:hover {
+    color: #374151;
+    background-color: #F3F4F6;
+}
+
+.action-icon-btn.edit:hover {
+    color: #3B82F6; /* Blue for edit */
+    background-color: #DBEAFE;
+}
+
+.action-icon-btn.delete:hover {
+    color: #EF4444; /* Red for delete */
+    background-color: #FEE2E2;
+}
+
+/* Dynamic Contract Type Badges */
+.type-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: fit-content;
+    margin-top: 2px;
+}
+
+.type-badge.full-time {
+    background-color: #D1FAE5; /* Emerald Light */
+    color: #065F46; /* Emerald Dark */
+}
+
+.type-badge.part-time {
+    background-color: #FEF3C7; /* Amber Light */
+    color: #92400E; /* Amber Dark */
+}
+
+/* -------------------------------------
+   FILTER MODAL & ENTERPRISE RADIO CARDS
+-------------------------------------- */
+
+.filter-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(17, 24, 39, 0.4);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.filter-modal {
+    background: white;
+    width: 420px;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.filter-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #111827;
+}
+
+.filter-header .close-panel-btn {
+    position: static;
+    padding: 4px;
+}
+
+.filter-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.filter-section h4 {
+    font-size: 13px;
+    color: #6B7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+}
+
+/* Radio Cards (SVG visual selectors) */
+.radio-card-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.radio-card {
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6B7280;
+    background-color: white;
+}
+
+.radio-card:hover {
+    border-color: #D1D5DB;
+    background-color: #F9FAFB;
+}
+
+.radio-card span {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.radio-card.selected {
+    border-color: #8B5CF6;
+    background-color: #F5F3FF;
+    color: #7C3AED;
+}
+
+.radio-card.selected svg {
+    color: #8B5CF6;
+}
+
+/* Subject Standard Dropdown */
+.filter-select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #111827;
+    outline: none;
+    background: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.filter-select:focus {
+    border-color: #8B5CF6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.filter-footer {
+    padding: 20px 24px;
+    background-color: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Active Filter Badge on Global Action Bar */
+.filter-btn {
+    position: relative;
+}
+
+.filter-btn.active-filter {
+    border-color: #8B5CF6;
+    color: #7C3AED;
+    background-color: #F5F3FF;
+}
+
+.filter-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background-color: #8B5CF6;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
+/* Dedicated modal for the wider Grid */
+.grid-modal {
+    background: white;
+    width: 650px; 
+    max-width: 95vw;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    animation: scaleIn 0.2s ease-out;
+}
+
+.grid-modal-body {
+    padding: 24px;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+/* Ensure table cells don't pop when hovered in read-only mode */
+.availability-cell.read-only {
+    cursor: default;
+}
+.availability-cell.read-only:hover {
+    transform: none;
+}
+
+/* --- DETAIL AVATAR UPLOAD OVERLAY & ACTIONS --- */
+.detail-avatar-wrapper {
+    position: relative;
+    width: 86px; 
+    height: 86px;
+    margin-bottom: 12px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.detail-avatar, .detail-avatar-placeholder {
+    margin-bottom: 0 !important; /* Overrides previous margin */
+    width: 80px;
+    height: 80px;
+    border: 3px solid #F5F3FF;
+    box-sizing: border-box;
+}
+
+.detail-avatar-placeholder {
+    background-color: #E0E7FF;
+    color: #4F46E5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 50%;
+    font-size: 32px; 
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 3px; left: 3px; right: 3px; bottom: 3px; /* Accounts for the 3px border */
+    background: rgba(17, 24, 39, 0.65);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border-radius: 50%;
+}
+
+.detail-avatar-wrapper:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.overlay-btn {
+    background: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.overlay-btn:hover { background: #F3F4F6; transform: scale(1.05); }
+.overlay-btn.danger { color: #DC2626; }
+.overlay-btn.danger:hover { background: #FEF2F2; }
+
+/* Detail Panel Top Actions */
+.detail-header-actions {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.detail-header-actions .close-panel-btn {
+    position: static; /* Overrides the previous absolute positioning */
+}
+
+.detail-edit-btn {
+    background: #F3F4F6;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.detail-edit-btn:hover {
+    background: #E5E7EB;
+    color: #111827;
+}

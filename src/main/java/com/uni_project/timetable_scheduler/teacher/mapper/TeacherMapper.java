@@ -1,5 +1,6 @@
 package com.uni_project.timetable_scheduler.teacher.mapper;
 
+import com.uni_project.timetable_scheduler.department.Department;
 import com.uni_project.timetable_scheduler.subject.dto.SubjectLabelDTO;
 import com.uni_project.timetable_scheduler.teacher.Teacher;
 import com.uni_project.timetable_scheduler.teacher.TeacherSubject;
@@ -23,6 +24,7 @@ public interface TeacherMapper {
     void updateTeacherFromDto(TeacherEditDTO dto, @MappingTarget Teacher teacher);
 
     @Mapping(source = "teacherSubjects", target = "subjects", qualifiedByName = "mapTeacherSubjectsToDTOs")
+    @Mapping(source = "department", target = "department", qualifiedByName = "mapDepartmentToDTO")
     TeacherDetailDTO toDetailsDTO(Teacher teacher);
 
     @Named("mapTeacherSubjectsToDTOs")
@@ -36,5 +38,10 @@ public interface TeacherMapper {
                         s.getName(),
                         s.getSubjectCode()
                 )).toList();
+    }
+
+    @Named("mapDepartmentToDTO")
+    default String mapDepartmentToDTO (Department department) {
+        return  department.getName();
     }
 }

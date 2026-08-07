@@ -1,5 +1,7 @@
 package com.uni_project.timetable_scheduler.room;
 
+import com.uni_project.timetable_scheduler.exception.EntityInUseException;
+import com.uni_project.timetable_scheduler.timetable.repos.TimetableSlotRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -8,9 +10,11 @@ import java.util.List;
 public class RoomService {
 
     private final RoomRepository roomRepository;
+    private final TimetableSlotRepository slotRepo;
 
-    public RoomService(RoomRepository roomRepository) {
+    public RoomService(RoomRepository roomRepository,  TimetableSlotRepository timetableSlotRepo) {
         this.roomRepository = roomRepository;
+        this.slotRepo = timetableSlotRepo;
     }
 
     public List<Room> findAll() {
@@ -22,6 +26,9 @@ public class RoomService {
     }
 
     public void deleteRoom(Integer id) {
+        if (slotRepo.existsByRoomId(id)) {
+            throw new EntityInUseException("Cannot delete room. It is actively scheduled in a Draft or Published timetable.");
+        }
         roomRepository.deleteById(id);
     }
 

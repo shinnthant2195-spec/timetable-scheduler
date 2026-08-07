@@ -1,6 +1,7 @@
 package com.uni_project.timetable_scheduler.teacher;
 
 import com.uni_project.timetable_scheduler.department.DepartmentRepository;
+import com.uni_project.timetable_scheduler.exception.EntityInUseException;
 import com.uni_project.timetable_scheduler.storage.CloudStorageService;
 import com.uni_project.timetable_scheduler.subject.SubjectRepository;
 import com.uni_project.timetable_scheduler.teacher.dto.TeacherCreationDTO;
@@ -8,6 +9,8 @@ import com.uni_project.timetable_scheduler.teacher.dto.TeacherDetailDTO;
 import com.uni_project.timetable_scheduler.teacher.dto.TeacherEditDTO;
 import com.uni_project.timetable_scheduler.teacher.dto.TeacherSummaryDTO;
 import com.uni_project.timetable_scheduler.teacher.mapper.TeacherMapper;
+import com.uni_project.timetable_scheduler.timetable.repos.TeacherAvailabilityRepository;
+import com.uni_project.timetable_scheduler.timetable.repos.TimetableSlotRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,19 +33,25 @@ public class TeacherService {
     private final SubjectRepository subjectRepo;
     private final CloudStorageService cloudStorageService;
     private final DepartmentRepository departmentRepo;
+    private final TeacherAvailabilityRepository availabilityRepo;
+    private final TimetableSlotRepository slotRepo;
 
     public TeacherService(
             TeacherRepository teacherRepository,
             TeacherMapper teacherMapper,
             SubjectRepository subjectRepo,
             CloudStorageService cloudStorageService,
-            DepartmentRepository departmentRepo
+            DepartmentRepository departmentRepo,
+            TeacherAvailabilityRepository availabilityRepo,
+            TimetableSlotRepository slotRepo
     ) {
         this.teacherRepo = teacherRepository;
         this.teacherMapper = teacherMapper;
         this.subjectRepo = subjectRepo;
         this.cloudStorageService = cloudStorageService;
         this.departmentRepo = departmentRepo;
+        this.availabilityRepo = availabilityRepo;
+        this.slotRepo = slotRepo;
     }
 
     @Transactional(readOnly = true)
@@ -101,9 +110,7 @@ public class TeacherService {
         Teacher teacher = teacherMapper.createTeacherFromDto(dto);
 
         if (dto.subjectIds() != null && !dto.subjectIds().isEmpty()) {
-            dto.subjectIds().forEach(id -> {
-                teacher.addSubject(subjectRepo.getReferenceById(id));
-            });
+            dto.subjectIds().forEach(id -> teacher.addSubject(subjectRepo.getReferenceById(id)));
         }
 
         if (dto.department() != null) teacher.setDepartment(departmentRepo.getReferenceById(dto.department()));
@@ -112,7 +119,11 @@ public class TeacherService {
 
     @Transactional
     public void deleteTeacher(String id) {
+        if (slotRepo.existsByTeacherId(id)) {
+            throw new EntityInUseException("Cannot delete teacher. They are actively assigned to a Draft or Published timetable.");
+        }
         deleteImage(id);
+        availabilityRepo.deleteByTeacherIdBulk(id);
         teacherRepo.deleteById(id);
     }
 

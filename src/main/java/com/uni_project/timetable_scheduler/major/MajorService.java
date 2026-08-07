@@ -1,5 +1,7 @@
 package com.uni_project.timetable_scheduler.major;
 
+import com.uni_project.timetable_scheduler.exception.EntityInUseException;
+import com.uni_project.timetable_scheduler.session.SessionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -8,9 +10,11 @@ import java.util.List;
 public class MajorService {
 
     private final MajorRepository majorRepo;
+    private final SessionRepository sessionRepo;
 
-    public MajorService(MajorRepository majorRepo) {
+    public MajorService(MajorRepository majorRepo,  SessionRepository sessionRepo) {
         this.majorRepo = majorRepo;
+        this.sessionRepo = sessionRepo;
     }
 
     public List<Major> getAllMajors() {
@@ -22,6 +26,10 @@ public class MajorService {
     }
 
     public void deleteMajor(String id) {
+        if (sessionRepo.existsByMajorId(id)) {
+            throw new EntityInUseException("Cannot delete Major. It is currently assigned to one or more active student Sessions.");
+        }
+
         majorRepo.deleteById(id);
     }
 

@@ -1,11 +1,12 @@
 package com.uni_project.timetable_scheduler.subject;
 
-import com.uni_project.timetable_scheduler.major.Major;
-import com.uni_project.timetable_scheduler.major.MajorRepository;
+import com.uni_project.timetable_scheduler.exception.EntityInUseException;
+import com.uni_project.timetable_scheduler.session.SessionRepository;
 import com.uni_project.timetable_scheduler.subject.dto.SubjectLabelDTO;
 import com.uni_project.timetable_scheduler.subject.dto.SubjectRequestDTO;
 import com.uni_project.timetable_scheduler.subject.dto.SubjectResponseDTO;
 import com.uni_project.timetable_scheduler.subject.mapper.SubjectMapper;
+import com.uni_project.timetable_scheduler.timetable.repos.TimetableSlotRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,20 +15,20 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class SubjectService {
 
     private final SubjectRepository subjectRepo;
-    private final MajorRepository majorRepo;
     private final SubjectMapper subjectMapper;
+    private final SessionRepository sessionRepo;
+    private final TimetableSlotRepository slotRepo;
 
-    public SubjectService(SubjectRepository subjectRepo, MajorRepository majorRepo, SubjectMapper subjectMapper) {
+    public SubjectService(SubjectRepository subjectRepo, SubjectMapper subjectMapper, SessionRepository sessionRepo, TimetableSlotRepository slotRepo) {
         this.subjectRepo = subjectRepo;
-        this.majorRepo = majorRepo;
         this.subjectMapper = subjectMapper;
+        this.sessionRepo = sessionRepo;
+        this.slotRepo = slotRepo;
     }
 
     public Page<SubjectResponseDTO> findAllSubjects(String sortBy, String sortDir, Integer page, Integer size) {
@@ -60,6 +61,11 @@ public class SubjectService {
 
     @Transactional
     public void deleteSubject(Integer id) {
+        if (slotRepo.existsBySubjectId(id)) {
+            throw new EntityInUseException("Cannot delete subject. It is currently scheduled in a Draft or Published timetable.");
+        }
+
+        sessionRepo.removeSubjectAssignmentBulk(id);
         subjectRepo.deleteById(id);
     }
 
@@ -71,5 +77,4 @@ public class SubjectService {
         subjectMapper.updateSubjectFromDTO(dto, s);
         return subjectRepo.save(s);
     }
-
 }

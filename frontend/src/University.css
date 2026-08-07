@@ -1,0 +1,314 @@
+.uni-config-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    height: 100%;
+}
+
+.config-header h2 {
+    font-size: 22px;
+    color: #111827;
+    margin: 0 0 6px 0;
+}
+
+.config-header p {
+    color: #6B7280;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Tab Navigation */
+.config-tabs {
+    display: flex;
+    gap: 12px;
+    border-bottom: 2px solid #E5E7EB;
+    padding-bottom: 2px;
+}
+
+.config-tabs button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6B7280;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.config-tabs button:hover {
+    color: #374151;
+}
+
+.config-tabs button.active {
+    color: #8B5CF6;
+    font-weight: 600;
+}
+
+.config-tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #8B5CF6;
+    border-radius: 3px 3px 0 0;
+}
+
+/* Grid & Table overrides */
+.data-grid-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    padding: 24px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.grid-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.grid-toolbar h3 {
+    font-size: 16px;
+    color: #111827;
+    margin: 0;
+}
+
+/* Inline Editing Inputs */
+.editing-row td {
+    background-color: #F9FAFB;
+}
+
+.editing-row input, .editing-row select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.editing-row input:focus, .editing-row select:focus {
+    border-color: #8B5CF6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+}
+
+.badge-id {
+    background-color: #F3F4F6;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #4B5563;
+    border: 1px solid #E5E7EB;
+}
+
+.type-badge.lecture { background-color: #DBEAFE; color: #1E40AF; }
+.type-badge.lab { background-color: #FEE2E2; color: #991B1B; }
+.type-badge.theater { background-color: #F3E8FF; color: #6B21A8; }
+
+/* Replace your existing .type-badge classes with these explicit ones */
+.type-badge.major { background-color: #D1FAE5; color: #065F46; } /* Emerald */
+.type-badge.minor { background-color: #E0F2FE; color: #0369A1; } /* Sky Blue */
+.type-badge.elective { background-color: #FEF3C7; color: #92400E; } /* Amber */
+
+.actions-col {
+    width: 100px;
+    text-align: right;
+}
+
+/* Action Buttons specifically for inline edit */
+.action-icon-btn.check:hover {
+    background-color: #D1FAE5;
+}
+.action-icon-btn.cancel:hover {
+    background-color: #F3F4F6;
+}
+
+/* -------------------------------------
+   ENTERPRISE FORM MODAL (SUBJECTS)
+-------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(17, 24, 39, 0.5);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.enterprise-modal {
+    background: white;
+    width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    animation: scaleIn 0.2s ease-out;
+}
+
+.enterprise-modal .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.enterprise-modal .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #111827;
+}
+
+.enterprise-modal .close-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #9CA3AF;
+    cursor: pointer;
+}
+
+.enterprise-modal .close-btn:hover {
+    color: #111827;
+}
+
+.enterprise-modal .modal-body {
+    padding: 24px;
+}
+
+/* Modal Form Grid */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select {
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    background-color: white;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #8B5CF6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+}
+
+.multi-select {
+    height: auto;
+    min-height: 80px;
+}
+
+.help-text {
+    font-size: 11px;
+    color: #9CA3AF;
+    margin-top: 4px;
+}
+
+/* Beautiful Lab Checkbox Layout */
+.checkbox-group {
+    margin-top: 10px;
+    padding: 12px;
+    background-color: #F9FAFB;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    accent-color: #8B5CF6;
+}
+
+.checkbox-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.checkbox-text strong {
+    font-size: 14px;
+    color: #111827;
+}
+
+.checkbox-text span {
+    font-size: 12px;
+    color: #6B7280;
+    font-weight: normal;
+}
+
+.enterprise-modal .modal-footer {
+    padding: 16px 24px;
+    background-color: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* -------------------------------------
+   BEAUTIFUL LAB BADGE (Table View)
+-------------------------------------- */
+.lab-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #FEF2F2;
+    color: #DC2626;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid #FCA5A5;
+}
+
+.lab-icon {
+    width: 12px;
+    height: 12px;
+}

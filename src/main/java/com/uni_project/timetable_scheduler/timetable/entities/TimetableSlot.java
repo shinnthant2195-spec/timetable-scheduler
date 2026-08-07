@@ -9,12 +9,7 @@ import jakarta.persistence.*;
 import java.time.DayOfWeek;
 
 @Entity
-@Table(name = "timetable_slot", uniqueConstraints = {
-        // Prevents database-level double booking corruption just in case!
-        @UniqueConstraint(columnNames = {"teacher_id", "day_of_week", "class_period_id"}),
-        @UniqueConstraint(columnNames = {"room_id", "day_of_week", "class_period_id"}),
-        @UniqueConstraint(columnNames = {"session_id", "day_of_week", "class_period_id"})
-})
+@Table(name = "timetable_slot")
 public class TimetableSlot {
 
     public enum TimetableStatus {
@@ -55,6 +50,32 @@ public class TimetableSlot {
 
     // Getters and Setters omitted for brevity...
     // Please generate standard getters/setters for all fields!
+
+    public Long getId() {
+        return id;
+    }
+    public DayOfWeek getDayOfWeek() {
+        return dayOfWeek;
+    }
+    public ClassPeriod getClassPeriod() {
+        return classPeriod;
+    }
+    public Room getRoom() {
+        return room;
+    }
+    public Session getSession() {
+        return session;
+    }
+    public Subject getSubject() {
+        return subject;
+    }
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public TimetableStatus getStatus() {
+        return status;
+    }
     public void setDayOfWeek(DayOfWeek dayOfWeek) { this.dayOfWeek = dayOfWeek; }
     public void setClassPeriod(ClassPeriod classPeriod) { this.classPeriod = classPeriod; }
     public void setRoom(Room room) { this.room = room; }

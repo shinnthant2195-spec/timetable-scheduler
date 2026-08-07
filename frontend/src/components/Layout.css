@@ -1,0 +1,249 @@
+/* src/components/Layout.css */
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght=0,100..700;1,100..700&display=swap');
+
+.layout-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: #F3F4F8; 
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+  width: 240px; 
+  background-color: #8A33C9;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  /* Make sure to remove any border-right here so the connection is seamless */
+  border-right: none; 
+}
+
+.sidebar-header {
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-header h2 {
+  font-size: 22px;
+  color: #ffffff; /* A distinct brand color */
+  margin: 0;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  /* We remove the right padding so the active item touches the main content */
+  padding: 0 0 0 16px; 
+  
+  /* --- Add these to hide the scrollbar visually --- */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Add this right below .sidebar-nav to hide it in WebKit browsers */
+.sidebar-nav::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.item-list {
+  list-style: none;
+  /* Change this from 0 to '0 0 20px 0' to add bottom padding */
+  padding: 0 0 20px 0; 
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px; 
+}
+
+.item-list li {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 16px;
+  color: #ffffff;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  position: relative;
+  /* Round only the left corners */
+  border-radius: 20px 0 0 20px; 
+}
+
+.item-list li svg {
+  margin-right: 14px;
+  width: 18px;
+  height: 18px;
+  z-index: 2; /* Keep icon above the background */
+}
+
+.item-list li span {
+  z-index: 2; /* Keep text above the background */
+}
+
+/* Hover State */
+.item-list li:hover:not(.active) {
+  background-color: #F9FAFB;
+  color: #111827;
+}
+
+/* Active State - Matches Main Content Background */
+.item-list li.active {
+  background-color: #F3F4F8; 
+  color: #8B5CF6; /* Your active brand color */
+  font-weight: 600;
+}
+
+.item-list li.active::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -20px;
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  border-bottom-right-radius: 20px;
+  /* The shadow color MUST match the active background (#F3F4F8) */
+  box-shadow: 10px 10px 0 10px #F3F4F8;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Bottom Curve */
+.item-list li.active::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -20px;
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  border-top-right-radius: 20px;
+  /* The shadow color MUST match the active background (#F3F4F8) */
+  box-shadow: 10px -10px 0 10px #F3F4F8;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* --- MAIN CONTENT & TOPBAR --- */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.topbar {
+  height: 84px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 10px 16px;
+  width: 320px;
+}
+
+.search-bar input {
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  color: #111827;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+}
+
+.search-bar input::placeholder {
+  color: #9CA3AF;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.action-icons {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+  color: #6B7280;
+  transition: color 0.2s;
+}
+
+.icon-btn:hover svg {
+  color: #4F46E5;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}
+
+.profile-role {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+/* Page Content Window */
+.page-content {
+  flex: 1;
+  padding: 32px; 
+  overflow-y: auto;
+}
