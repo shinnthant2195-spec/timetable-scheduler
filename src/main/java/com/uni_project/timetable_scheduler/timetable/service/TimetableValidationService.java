@@ -5,6 +5,7 @@ import com.uni_project.timetable_scheduler.room.Room;
 import com.uni_project.timetable_scheduler.session.Session;
 import com.uni_project.timetable_scheduler.subject.Subject;
 import com.uni_project.timetable_scheduler.teacher.Teacher;
+import com.uni_project.timetable_scheduler.timetable.entities.TimetableSlot;
 import com.uni_project.timetable_scheduler.timetable.repos.TeacherAvailabilityRepository;
 import com.uni_project.timetable_scheduler.timetable.repos.TimetableSlotRepository;
 import org.springframework.stereotype.Service;
@@ -47,15 +48,71 @@ public class TimetableValidationService {
             }
         }
 
-        // 2. Applied the new NotIn queries
-        if (slotRepo.existsByTeacherIdAndDayOfWeekAndClassPeriodIdAndIdNotIn(teacher.getId(), day, period.getId(), excludes)) {
-            throw new IllegalArgumentException("Teacher is double-booked.");
-        }
-        if (slotRepo.existsBySessionIdAndDayOfWeekAndClassPeriodIdAndIdNotIn(session.getId(), day, period.getId(), excludes)) {
-            throw new IllegalArgumentException("Session cohort is double-booked.");
-        }
-        if (slotRepo.existsByRoomIdAndDayOfWeekAndClassPeriodIdAndIdNotIn(room.getId(), day, period.getId(), excludes)) {
-            throw new IllegalArgumentException("Room is double-booked.");
+        List<TimetableSlot> potentialSlots = slotRepo.findPotentialConflicts(
+                teacher.getId(), session.getId(), room.getId(), day, period.getId(), excludes
+        );
+
+        int aggregatedStudentCount = session.getTotalStudent();
+
+        for (TimetableSlot existing :  potentialSlots) {
+
+            // 1. Session Conflict Check
+            if (existing.getSession().getId().equals(session.getId())) {
+                boolean bothAreElectives = existing.getSubject().getSubjectType() == Subject.SubjectType.ELECTIVE &&
+                       subject.getSubjectType() == Subject.SubjectType.ELECTIVE;
+
+                if (!bothAreElectives) {
+                    throw new IllegalArgumentException("Session '" + session.getName() + "' is double-booked (Only concurrent electives are allowed).");
+                }
+            }
+
+            // 2. Teacher Conflict Check
+            if (existing.getTeacher().getId().equals(teacher.getId())) {
+                boolean isSharedClass = existing.getSubject().getId().equals(subject.getId()) &&
+                        existing.getRoom().getId().equals(room.getId());
+
+                if (!isSharedClass) {
+                    throw new IllegalArgumentException("Teacher '" + teacher.getName() + "' is double-booked with a different class or room.");
+                }
+            }
+
+            // 3. Room Conflict Check
+            if (existing.getRoom().getId().equals(room.getId())) {
+                boolean isSharedClass = existing.getSubject().getId().equals(subject.getId()) &&
+                        existing.getTeacher().getId().equals(teacher.getId());
+
+                if (!isSharedClass) {
+                    throw new IllegalArgumentException("Room '" + room.getName() + "' is double-booked by another class.");
+                } else {
+                    aggregatedStudentCount += existing.getSession().getTotalStudent();
+                }
+            }
+
+            if (aggregatedStudentCount > room.getCapacity() && subject.getSubjectType() != Subject.SubjectType.ELECTIVE) {
+                throw new IllegalArgumentException("Combined session sizes (" + aggregatedStudentCount + ") exceed Room '" + room.getName() + "' capacity (" + room.getCapacity() + ").");
+            }
         }
     }
+
+        /*
+        for (TimetableSlot existing : potentialConflicts) {
+
+            // 3. Room Conflict Check
+            if (existing.getRoom().getId().equals(room.getId())) {
+                boolean isSharedClass = existing.getSubject().getId().equals(subject.getId()) &&
+                                        existing.getTeacher().getId().equals(teacher.getId());
+                if (!isSharedClass) {
+                    throw new IllegalArgumentException("Room '" + room.getName() + "' is double-booked by another class.");
+                } else {
+                    // It is a valid shared class! Add this existing session's students to our aggregate count
+                    aggregatedStudentCount += existing.getSession().getTotalStudent();
+                }
+            }
+        }
+
+        // 4. Aggregated Room Capacity Check
+        if (aggregatedStudentCount > room.getCapacity()) {
+            throw new IllegalArgumentException("Combined session sizes (" + aggregatedStudentCount + ") exceed Room '" + room.getName() + "' capacity (" + room.getCapacity() + ").");
+        }
+         */
 }

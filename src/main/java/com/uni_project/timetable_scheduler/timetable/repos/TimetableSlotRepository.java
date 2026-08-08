@@ -15,10 +15,6 @@ import java.util.List;
 @Repository
 public interface TimetableSlotRepository extends JpaRepository<TimetableSlot, Long> {
 
-    boolean existsByTeacherIdAndDayOfWeekAndClassPeriodIdAndIdNotIn(String teacherId, DayOfWeek day, Long periodId, Collection<Long> ids);
-    boolean existsBySessionIdAndDayOfWeekAndClassPeriodIdAndIdNotIn(Integer sessionId, DayOfWeek day, Long periodId, Collection<Long> ids);
-    boolean existsByRoomIdAndDayOfWeekAndClassPeriodIdAndIdNotIn(Integer roomId, DayOfWeek day, Long periodId, Collection<Long> ids);
-
     // Wipes only the drafts when we run a new AI generation
     @Modifying
     @Query("DELETE FROM TimetableSlot t WHERE t.status = 'DRAFT'")
@@ -65,4 +61,17 @@ public interface TimetableSlotRepository extends JpaRepository<TimetableSlot, Lo
     @Query("DELETE FROM TimetableSlot t WHERE t.status = 'PUBLISHED'")
     void deleteAllPublished();
 
+    // TimeSlot Validation
+    @Query("SELECT t FROM TimetableSlot t " +
+            "WHERE t.dayOfWeek = :day AND t.classPeriod.id = :periodId " +
+            "AND t.id NOT IN :excludes " +
+            "AND (t.teacher.id = :teacherId OR t.session.id = :sessionId OR t.room.id = :roomId)")
+    List<TimetableSlot> findPotentialConflicts(
+            @Param("teacherId") String teacherId,
+            @Param("sessionId") Integer sessionId,
+            @Param("roomId") Integer roomId,
+            @Param("day") DayOfWeek day,
+            @Param("periodId") Long periodId,
+            @Param("excludes") Collection<Long> excludes
+    );
 }
