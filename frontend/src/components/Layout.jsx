@@ -12,6 +12,9 @@ import {
   faMessage
 } from '@fortawesome/free-solid-svg-icons';
 
+// Add this line to import your image:
+import profileImage from '../assets/photo_2026-08-08_14-52-47.jpg';
+
 function Layout({ activePage, setActivePage, children, onLogout, username = "Guest User" }) {
     
     return (
@@ -20,7 +23,7 @@ function Layout({ activePage, setActivePage, children, onLogout, username = "Gue
             {/* Sidebar */}
             <aside className="sidebar">
                 <div className="sidebar-header">
-                    <h2>SCHEDULER</h2>
+                    <h2>INTELLICLASS</h2>
                 </div>
 
                 <div className="sidebar-nav">
@@ -65,10 +68,8 @@ function Layout({ activePage, setActivePage, children, onLogout, username = "Gue
             {/* Main Content Window */}
             <main className="main-content">
                 <header className="topbar">
-                    {/* Search Bar */}
-                    <div className="search-bar">
-                        <input type="text" placeholder="Search anything..." />
-                    </div>
+                    
+                    {/* Delete Search Bar Here*/}
                     
                     {/* Topbar Right Controls */}
                     <div className="topbar-right">
@@ -83,7 +84,7 @@ function Layout({ activePage, setActivePage, children, onLogout, username = "Gue
 
                         <div className="user-profile" onClick={onLogout}>
                             <img 
-                                src="https://i.pravatar.cc/150?img=12" 
+                                src={profileImage} 
                                 alt="User Profile" 
                                 className="profile-avatar" 
                             />

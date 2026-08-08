@@ -33,10 +33,10 @@ const TeacherRegistration = ({ onComplete }) => {
 
     
     useEffect(() => {
-        fetch('http://localhost:8080/api/subject/label').then(res => res.json()).then(setSubjects);
-        fetch('http://localhost:8080/api/department').then(res => res.json()).then(setDepartments); // NEW FETCH
+        fetch('http://localhost:8082/api/subject/label').then(res => res.json()).then(setSubjects);
+        fetch('http://localhost:8082/api/department').then(res => res.json()).then(setDepartments); // NEW FETCH
         
-        fetch('http://localhost:8080/api/period')
+        fetch('http://localhost:8082/api/period')
             .then(res => res.json())
             .then(data => {
                 const lectures = data.filter(p => p.type === 'LECTURE' || p.type === 'lecture');
@@ -141,7 +141,7 @@ const TeacherRegistration = ({ onComplete }) => {
                 profileUrl: ''
             };
 
-            const response = await fetch('http://localhost:8080/api/teacher/add', {
+            const response = await fetch('http://localhost:8082/api/teacher/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(teacherPayload)
@@ -152,7 +152,7 @@ const TeacherRegistration = ({ onComplete }) => {
             if (formData.profileImage) {
                 const imgData = new FormData();
                 imgData.append('file', formData.profileImage);
-                await fetch(`http://localhost:8080/api/teacher/${formData.id}/upload-img`, {
+                await fetch(`http://localhost:8082/api/teacher/${formData.id}/upload-img`, {
                     method: 'POST',
                     body: imgData
                 });
@@ -160,7 +160,7 @@ const TeacherRegistration = ({ onComplete }) => {
 
             // 3. Save Availability Grid (New)
             if (availableSlots.length > 0) {
-                const availResponse = await fetch(`http://localhost:8080/api/teacher-availability/${formData.id}`, {
+                const availResponse = await fetch(`http://localhost:8082/api/teacher-availability/${formData.id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(availableSlots)

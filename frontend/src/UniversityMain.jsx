@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './University.css';
 import { apiFetch } from './utils/apiClient';
 
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'http://localhost:8082/api';
 
 export default function UniversityConfigManager() {
     const [activeTab, setActiveTab] = useState('departments');

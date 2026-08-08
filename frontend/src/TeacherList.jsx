@@ -44,7 +44,7 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
                 formData.append('file', file);
                 
                 // Post directly to backend
-                const res = await fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}/upload-img`, {
+                const res = await fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}/upload-img`, {
                     method: 'POST',
                     body: formData
                 });
@@ -53,7 +53,7 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
                 
                 // Refresh main table and detail panel to fetch the new Cloud URL
                 fetchTeachers(); 
-                const detailRes = await fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}`);
+                const detailRes = await fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}`);
                 setTeacherDetail(await detailRes.json());
                 
             } catch (err) {
@@ -70,7 +70,7 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
             
             setIsImageUploading(true);
             try {
-                const res = await fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}/delete-img`, {
+                const res = await fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}/delete-img`, {
                     method: 'DELETE'
                 });
                 
@@ -78,7 +78,7 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
                 
                 // Refresh table and detail panel to remove the image from the UI
                 fetchTeachers();
-                const detailRes = await fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}`);
+                const detailRes = await fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}`);
                 setTeacherDetail(await detailRes.json());
                 
             } catch (err) {
@@ -157,7 +157,7 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
 
     // Fetch standard periods for the grid structure on mount
     useEffect(() => {
-        fetch('http://localhost:8080/api/period')
+        fetch('http://localhost:8082/api/period')
             .then(res => res.json())
             .then(data => {
                 const lectures = data.filter(p => p.type === 'LECTURE' || p.type === 'lecture');
@@ -169,7 +169,7 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
     // Function to open the grid
     const openAvailabilityGrid = async (id) => {
         try {
-            const res = await fetch(`http://localhost:8080/api/teacher-availability/${id}`);
+            const res = await fetch(`http://localhost:8082/api/teacher-availability/${id}`);
             setTeacherGrid(await res.json());
             setGridModalOpen(true);
         } catch(e) { console.error("Failed to load availability", e); }
@@ -177,15 +177,15 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
 
     // Fetch Subjects for the filter dropdown
     useEffect(() => {
-        fetch('http://localhost:8080/api/subject/label').then(res => res.json()).then(setSubjects);
-        fetch('http://localhost:8080/api/department').then(res => res.json()).then(setDepartments); // Fetch departments
+        fetch('http://localhost:8082/api/subject/label').then(res => res.json()).then(setSubjects);
+        fetch('http://localhost:8082/api/department').then(res => res.json()).then(setDepartments); // Fetch departments
     }, []);
 
     const fetchTeachers = () => {
         setLoading(true);
 
         // Dynamically construct URL with JPA Specification filters
-        let url = `http://localhost:8080/api/teacher?sortBy=${sortBy}&sortDir=${sortDir}&page=0&size=50`;
+        let url = `http://localhost:8082/api/teacher?sortBy=${sortBy}&sortDir=${sortDir}&page=0&size=50`;
         if (filters.gender) url += `&gender=${filters.gender}`;
         if (filters.teacherType) url += `&teacherType=${filters.teacherType}`;
         if (filters.subjectId) url += `&subjectId=${filters.subjectId}`;
@@ -215,7 +215,7 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
         }
         
         setDetailLoading(true);
-        fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}`)
+        fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}`)
             .then(res => res.json())
             .then(data => {
                 setTeacherDetail(data);
@@ -238,7 +238,7 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
         if (window.confirm(`Are you sure you want to delete teacher ${id}? This action cannot be undone.`)) {
             try {
                 // 1. Use the interceptor to catch the 409 Conflict
-                await apiFetch(`http://localhost:8080/api/teacher/${id}`, { method: 'DELETE' });
+                await apiFetch(`http://localhost:8082/api/teacher/${id}`, { method: 'DELETE' });
                 
                 // 2. Safely clear states upon success
                 if (selectedTeacherId === id) setSelectedTeacherId(null);
