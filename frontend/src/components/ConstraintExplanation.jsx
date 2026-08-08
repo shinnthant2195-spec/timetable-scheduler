@@ -2,17 +2,28 @@
 import React from 'react';
 import './ConstraintExplanation.css';
 
+import logoImage from "../assets/nspu logo.png";
+
 export default function ConstraintExplanation() {
     return (
         <div className="explanation-container">
+            
             {/* Hero Section */}
-            <div className="explanation-hero">
-                <h1>IntelliClass Scheduler ၏ အလုပ်လုပ်ပုံ</h1>
-                <p>
-                    Timefold AI (Artificial Intelligence) ကို အသုံးပြု၍ 
-                    ဆရာ၊ ကျောင်းသား နှင့် အခန်းများ၏ လိုအပ်ချက်များကို အကောင်းဆုံး တွက်ချက်ကာ 
-                    အမှားအယွင်းကင်းသော အချိန်ဇယားများကို အလိုအလျောက် ရေးဆွဲပေးပါသည်။
-                </p>
+            <div className="hero-layout">
+                {/* Change the class names on this div below: */}
+                <div className="hero-left">
+                    <h1>Intelliclass</h1>
+                    <h2>TimeTable Scheduler</h2>
+                    <h3>--Master Your Time!--</h3>
+                </div>
+                
+                <div className="explanation-hero right-box">
+                    <p>
+                        Timefold AI ကို အသုံးပြု၍ 
+                        ဆရာ၊ ကျောင်းသား နှင့် အခန်းများ၏ လိုအပ်ချက်များကို အကောင်းဆုံး တွက်ချက်ကာ 
+                        အမှားအယွင်းကင်းသော အချိန်ဇယားများကို အလိုအလျောက် ရေးဆွဲပေးပါသည်။
+                    </p>
+                </div>
             </div>
 
             {/* Hard Constraints Section */}

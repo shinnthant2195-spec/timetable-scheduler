@@ -6,29 +6,68 @@
     animation: fadeIn 0.5s ease-in-out;
 }
 
-.explanation-hero {
-    text-align: center;
+/* --- NEW HERO LAYOUT --- */
+.hero-layout {
+    display: flex;
+    align-items: center;
+    gap: 32px;
     margin-bottom: 40px;
-    padding: 40px 20px;
+}
+
+/* Left Side: Clean Text Area */
+.hero-left {
+    flex: 1; /* This matches the right box so they split perfectly 50/50 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; /* Aligns the text neatly to the left */
+    text-align: left;
+    padding: 20px 0;
+}
+
+.hero-left h1 {
+    font-family: "Roboto Condensed", sans-serif;
+    font-size: 56px; /* Slightly larger since it has more room to breathe */
+    font-weight: 700;
+    color: #8A33C9;
+    margin: 0 0 12px 0;
+}
+
+.hero-left h2 {
+    font-size: 30px;
+    color: #111827;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+}
+
+.hero-left h3 {
+    font-family: "Edu VIC WA NT Hand Pre", cursive;
+    font-size: 18px;
+    color: #6B7280;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Right Side: The Purple Box */
+.explanation-hero.right-box {
+    flex: 1; /* Tells the box to take up all remaining space */
+    text-align: center;
+    padding: 40px 48px;
     background: linear-gradient(135deg, #8A33C9 0%, #4F46E5 100%);
     border-radius: 16px;
     color: white;
     box-shadow: 0 10px 25px -5px rgba(138, 51, 201, 0.3);
+    display: flex;
+    align-items: center;
+    min-height: 260px; /* Matches the height of the circle perfectly */
+    box-shadow: 2px 2px 10px rgb(92, 92, 92);
 }
 
-.explanation-hero h1 {
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 32px;
-    font-weight: 700;
-    margin: 0 0 16px 0;
-}
-
-.explanation-hero p {
-    font-size: 16px;
-    max-width: 600px;
+.explanation-hero.right-box p {
+    font-size: 22px; /* Slightly larger text for the wider box */
     margin: 0 auto;
-    line-height: 1.6;
-    color: #E0E7FF;
+    line-height: 1.8;
+    color: #ffffff;
 }
 
 .constraint-section {

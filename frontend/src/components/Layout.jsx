@@ -14,6 +14,7 @@ import {
 
 // Add this line to import your image:
 import profileImage from '../assets/photo_2026-08-08_14-52-47.jpg';
+import logoImage from "../assets/nspu logo.png";
 
 function Layout({ activePage, setActivePage, children, onLogout, username = "Guest User" }) {
     
@@ -69,7 +70,7 @@ function Layout({ activePage, setActivePage, children, onLogout, username = "Gue
             <main className="main-content">
                 <header className="topbar">
                     
-                    {/* Delete Search Bar Here*/}
+                    <img className='nspu-logo' alt="NSPU_Logo" src={logoImage}></img>
                     
                     {/* Topbar Right Controls */}
                     <div className="topbar-right">

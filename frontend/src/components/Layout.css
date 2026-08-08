@@ -147,11 +147,14 @@
   background-color: #ffffff;
   display: flex;
   align-items: center;
-  /* Change this line to push items to the right */
-  justify-content: flex-end; 
+  justify-content: space-between;
   padding: 0 40px;
   flex-shrink: 0;
   border-bottom: 1px solid #E5E7EB;
+}
+
+.topbar .nspu-logo {
+  width: 60px;
 }
 
 .search-bar {
