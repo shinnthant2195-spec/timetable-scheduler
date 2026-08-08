@@ -30,6 +30,8 @@ const TeacherRegistration = ({ onComplete }) => {
     const [formErrors, setFormErrors] = useState('');
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    // Add this new state right below isSubmitting:
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     
     useEffect(() => {
@@ -168,8 +170,7 @@ const TeacherRegistration = ({ onComplete }) => {
                 if (!availResponse.ok) throw new Error("Teacher saved, but availability sync failed.");
             }
 
-            alert("Teacher registered successfully!");
-            if (onComplete) onComplete();
+            setShowSuccessModal(true);
             
         } catch (error) {
             console.error(error);
@@ -239,7 +240,7 @@ const TeacherRegistration = ({ onComplete }) => {
                         <div className="row">
                             <div className="input-group">
                                 <label>Gender *</label>
-                                <div className="custom-dropdown-container" onMouseLeave={() => setIsGenderDropdownOpen(false)}>
+                                <div className="custom-dropdown-container">
                                     <div className="select-box" onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}>
                                         {formData.gender === 'MALE' ? 'Male' : 'Female'}
                                         <span className="arrow">▼</span>
@@ -254,7 +255,7 @@ const TeacherRegistration = ({ onComplete }) => {
                             </div>
                             <div className="input-group">
                                 <label>Contract Type *</label>
-                                <div className="custom-dropdown-container" onMouseLeave={() => setIsTypeDropdownOpen(false)}>
+                                <div className="custom-dropdown-container">
                                     <div className="select-box" onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}>
                                         {formData.teacherType === 'FULL_TIME' ? 'Full-Time' : 'Part-Time'}
                                         <span className="arrow">▼</span>
@@ -316,7 +317,7 @@ const TeacherRegistration = ({ onComplete }) => {
 
                         <div className="input-group">
                             <label>Assign Subjects *</label>
-                            <div className="custom-dropdown-container" onMouseLeave={() => setIsSubjectDropdownOpen(false)}>
+                            <div className="custom-dropdown-container">
                                 <div className="select-box" onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)}>
                                     {formData.subjectIds.length === 0 ? "Select subjects..." : `${formData.subjectIds.length} subject(s) selected`}
                                     <span className="arrow">▼</span>
@@ -426,6 +427,26 @@ const TeacherRegistration = ({ onComplete }) => {
                     </button>
                 )}
             </div>
+            
+       {/* --- CUSTOM SUCCESS MODAL --- */}
+            {showSuccessModal && (
+                <div className="filter-overlay" onClick={() => { setShowSuccessModal(false); if (onComplete) onComplete(); }}>
+                    <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                        <div className="confirm-modal-content">
+                            <div className="confirm-icon-wrapper success">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                            <h3>Success!</h3>
+                            <p>Teacher registered successfully.</p>
+                        </div>
+                        <div className="confirm-modal-actions">
+                            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setShowSuccessModal(false); if (onComplete) onComplete(); }}>
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

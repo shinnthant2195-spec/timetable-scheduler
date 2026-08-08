@@ -33,6 +33,9 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
     const fileInputRef = useRef(null);
     const [isImageUploading, setIsImageUploading] = useState(false);
 
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [teacherToDelete, setTeacherToDelete] = useState(null);
+
         // NEW: Handler for uploading an image directly from the detail panel
         const handleDetailImageUpload = async (e) => {
             const file = e.target.files[0];
@@ -233,21 +236,27 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
         setTimeout(() => setCopiedField(null), 2000); 
     };
 
-    const handleDelete = async (e, id) => {
+    // 1. Opens the modal instead of the browser alert
+    const handleDeleteClick = (e, id) => {
         e.stopPropagation();
-        if (window.confirm(`Are you sure you want to delete teacher ${id}? This action cannot be undone.`)) {
-            try {
-                // 1. Use the interceptor to catch the 409 Conflict
-                await apiFetch(`http://localhost:8082/api/teacher/${id}`, { method: 'DELETE' });
-                
-                // 2. Safely clear states upon success
-                if (selectedTeacherId === id) setSelectedTeacherId(null);
-                fetchTeachers();
-                
-            } catch (error) {
-                // 3. Gracefully surface the detailed error message
-                alert(`Deletion Blocked:\n\n${error.message}`);
-            }
+        setTeacherToDelete(id);
+        setDeleteModalOpen(true);
+    };
+
+    // 2. Actually deletes the teacher when they click "Delete" in the custom modal
+    const confirmDelete = async () => {
+        if (!teacherToDelete) return;
+        
+        try {
+            await apiFetch(`http://localhost:8082/api/teacher/${teacherToDelete}`, { method: 'DELETE' });
+            
+            if (selectedTeacherId === teacherToDelete) setSelectedTeacherId(null);
+            fetchTeachers();
+        } catch (error) {
+            alert(`Deletion Blocked:\n\n${error.message}`);
+        } finally {
+            setDeleteModalOpen(false);
+            setTeacherToDelete(null);
         }
     };
 
@@ -423,7 +432,8 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
                                                     <button className="action-icon-btn edit" title="Edit" onClick={(e) => { e.stopPropagation(); onEditClick(teacher.id); }}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                     </button>
-                                                    <button className="action-icon-btn delete" title="Delete" onClick={(e) => handleDelete(e, teacher.id)}>
+                                                    {/* Change onClick={(e) => handleDelete(e, teacher.id)} to this: */}
+                                                    <button className="action-icon-btn delete" title="Delete" onClick={(e) => handleDeleteClick(e, teacher.id)}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                                     </button>
                                                 </td>
@@ -608,6 +618,25 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
+            {deleteModalOpen && (
+                <div className="filter-overlay" onClick={() => setDeleteModalOpen(false)}>
+                    <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                        <div className="confirm-modal-content">
+                            <div className="confirm-icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </div>
+                            <h3>Delete Teacher</h3>
+                            <p>Do you delete this Teacher?</p>
+                        </div>
+                        <div className="confirm-modal-actions">
+                            <button className="btn-secondary" onClick={() => setDeleteModalOpen(false)}>Cancel</button>
+                            <button className="btn-primary danger-btn" onClick={confirmDelete}>Delete</button>
                         </div>
                     </div>
                 </div>
