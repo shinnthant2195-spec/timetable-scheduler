@@ -521,6 +521,9 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+    /* Add these lines to enable scrolling */
+    max-height: 60vh; /* Adjust this value as needed to fit your screen */
+    overflow-y: auto;
 }
 
 .filter-section h4 {
