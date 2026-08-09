@@ -139,17 +139,17 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(17, 24, 39, 0.5);
-    backdrop-filter: blur(2px);
+    width: 100%;
+    height: 100%;
+    /* The !important tag forces the exact dark color from the Teacher page */
+    background-color: rgba(17, 24, 39, 0.4) !important; 
+    backdrop-filter: blur(2px) !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 999;
+    z-index: 9999 !important;
     animation: fadeIn 0.2s ease-out;
 }
-
 .enterprise-modal {
     background: white;
     width: 500px;

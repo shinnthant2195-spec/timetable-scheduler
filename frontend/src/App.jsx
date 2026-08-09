@@ -29,7 +29,16 @@ function App() {
       case 'add-teacher':
         return (
             <div>
-                <button onClick={() => setActivePage('teacher')} style={{marginBottom: '16px', background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'}}>← Back to Teachers</button>
+                {/* Invisible wrapper that matches the form's width to push the button to the right edge */}
+                <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button 
+                        onClick={() => setActivePage('teacher')} 
+                        style={{marginBottom: '16px', background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600'}}
+                    >
+                        ← Back
+                    </button>
+                </div>
+                
                 <TeacherRegistration onComplete={() => setActivePage('teacher')} />
             </div>
         );

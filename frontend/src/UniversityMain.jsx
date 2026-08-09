@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './University.css';
 import { apiFetch } from './utils/apiClient';
 
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'http://localhost:8082/api';
 
 export default function UniversityConfigManager() {
     const [activeTab, setActiveTab] = useState('departments');
@@ -10,7 +10,7 @@ export default function UniversityConfigManager() {
 
     return (
         <div className="uni-config-wrapper">
-            {/* 3. Enterprise Error Modal Overlay */}
+            {/* Enterprise Error Modal Overlay */}
             {errorMessage && (
                 <div className="modal-overlay" onClick={() => setErrorMessage(null)}>
                     <div className="enterprise-modal error-modal" style={{ maxWidth: '420px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
@@ -46,7 +46,7 @@ export default function UniversityConfigManager() {
             </div>
 
             <div className="config-content">
-            {activeTab === 'departments' && <DepartmentManager showError={setErrorMessage} />}
+                {activeTab === 'departments' && <DepartmentManager showError={setErrorMessage} />}
                 {activeTab === 'majors' && <MajorManager showError={setErrorMessage} />}
                 {activeTab === 'rooms' && <RoomManager showError={setErrorMessage} />}
                 {activeTab === 'subjects' && <SubjectManager showError={setErrorMessage} />}
@@ -57,7 +57,7 @@ export default function UniversityConfigManager() {
 }
 
 // ==========================================
-// 1. DEPARTMENT MANAGER (NEW)
+// 1. DEPARTMENT MANAGER
 // ==========================================
 function DepartmentManager({ showError }) {
     const [departments, setDepartments] = useState([]);
@@ -65,6 +65,10 @@ function DepartmentManager({ showError }) {
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({ name: '' });
     const [isAdding, setIsAdding] = useState(false);
+
+    // Modal States
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
 
     useEffect(() => {
         fetch(`${API_BASE}/department`).then(r => r.json()).then(setDepartments).finally(() => setLoading(false));
@@ -89,16 +93,21 @@ function DepartmentManager({ showError }) {
         } catch (e) { console.error(e); }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm(`Delete this department?`)) return;
-        
+    const handleDeleteClick = (id) => {
+        setItemToDelete(id);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
         try {
-            // Replaced raw fetch with apiFetch
-            await apiFetch(`${API_BASE}/department/${id}`, { method: 'DELETE' });
-            setDepartments(departments.filter(d => d.id !== id));
+            await apiFetch(`${API_BASE}/department/${itemToDelete}`, { method: 'DELETE' });
+            setDepartments(departments.filter(d => d.id !== itemToDelete));
         } catch (error) {
-            // Surfacing the exact backend error to the modal
             showError(error.message); 
+        } finally {
+            setDeleteModalOpen(false);
+            setItemToDelete(null);
         }
     };
 
@@ -122,11 +131,19 @@ function DepartmentManager({ showError }) {
                         <tr key={d.id}>
                             <td><span className="badge-id">{d.id}</span></td>
                             <td className="fw-500">{editingId === d.id ? <input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /> : d.name}</td>
-                            <td>{editingId === d.id ? <ActionButtons onSave={() => handleSave(d.id)} onCancel={() => setEditingId(null)} /> : <EditDeleteButtons onEdit={() => { setEditingId(d.id); setEditForm(d); }} onDelete={() => handleDelete(d.id)} />}</td>
+                            <td>{editingId === d.id ? <ActionButtons onSave={() => handleSave(d.id)} onCancel={() => setEditingId(null)} /> : <EditDeleteButtons onEdit={() => { setEditingId(d.id); setEditForm(d); }} onDelete={() => handleDeleteClick(d.id)} />}</td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            <ConfirmDeleteModal 
+                isOpen={deleteModalOpen} 
+                onClose={() => setDeleteModalOpen(false)} 
+                onConfirm={confirmDelete} 
+                title="Delete Department" 
+                message="Are you sure you want to delete this department?" 
+            />
         </div>
     );
 }
@@ -134,11 +151,15 @@ function DepartmentManager({ showError }) {
 // ==========================================
 // 2. MAJOR MANAGER 
 // ==========================================
-function MajorManager() {
+function MajorManager({ showError }) {
     const [majors, setMajors] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({ id: '', name: '', academicYear: 2026, semester: 1 });
     const [isAdding, setIsAdding] = useState(false);
+
+    // Modal States
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
 
     useEffect(() => { fetch(`${API_BASE}/major`).then(r => r.json()).then(setMajors); }, []);
 
@@ -157,10 +178,22 @@ function MajorManager() {
         } catch (e) { console.error(e); }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm(`Delete major ${id}?`)) return;
-        await fetch(`${API_BASE}/major/${id}`, { method: 'DELETE' });
-        setMajors(majors.filter(m => m.id !== id));
+    const handleDeleteClick = (id) => {
+        setItemToDelete(id);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        try {
+            await apiFetch(`${API_BASE}/major/${itemToDelete}`, { method: 'DELETE' });
+            setMajors(majors.filter(m => m.id !== itemToDelete));
+        } catch (error) {
+            showError(error.message); 
+        } finally {
+            setDeleteModalOpen(false);
+            setItemToDelete(null);
+        }
     };
 
     return (
@@ -187,11 +220,19 @@ function MajorManager() {
                             <td>{editingId === m.id ? <input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /> : m.name}</td>
                             <td>{editingId === m.id ? <input type="number" value={editForm.academicYear} onChange={e => setEditForm({...editForm, academicYear: e.target.value})} /> : m.academicYear}</td>
                             <td>{editingId === m.id ? <input type="number" value={editForm.semester} onChange={e => setEditForm({...editForm, semester: e.target.value})} /> : m.semester}</td>
-                            <td>{editingId === m.id ? <ActionButtons onSave={() => handleSave(m.id)} onCancel={() => setEditingId(null)} /> : <EditDeleteButtons onEdit={() => { setEditingId(m.id); setEditForm(m); }} onDelete={() => handleDelete(m.id)} />}</td>
+                            <td>{editingId === m.id ? <ActionButtons onSave={() => handleSave(m.id)} onCancel={() => setEditingId(null)} /> : <EditDeleteButtons onEdit={() => { setEditingId(m.id); setEditForm(m); }} onDelete={() => handleDeleteClick(m.id)} />}</td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            <ConfirmDeleteModal 
+                isOpen={deleteModalOpen} 
+                onClose={() => setDeleteModalOpen(false)} 
+                onConfirm={confirmDelete} 
+                title="Delete Major" 
+                message={`Are you sure you want to delete major ${itemToDelete}?`} 
+            />
         </div>
     );
 }
@@ -205,6 +246,10 @@ function RoomManager({ showError }) {
     const [editForm, setEditForm] = useState({ name: '', floor: 1, capacity: 50, roomType: 'LECTURE' });
     const [isAdding, setIsAdding] = useState(false);
 
+    // Modal States
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+
     useEffect(() => { fetch(`${API_BASE}/room`).then(r => r.json()).then(setRooms); }, []);
 
     const handleSave = async (id, isNew = false) => {
@@ -217,14 +262,21 @@ function RoomManager({ showError }) {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Delete room?")) return;
-        
+    const handleDeleteClick = (id) => {
+        setItemToDelete(id);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
         try {
-            await apiFetch(`${API_BASE}/room/${id}`, { method: 'DELETE' });
-            setRooms(rooms.filter(r => r.id !== id));
+            await apiFetch(`${API_BASE}/room/${itemToDelete}`, { method: 'DELETE' });
+            setRooms(rooms.filter(r => r.id !== itemToDelete));
         } catch (error) {
             showError(error.message);
+        } finally {
+            setDeleteModalOpen(false);
+            setItemToDelete(null);
         }
     };
 
@@ -252,17 +304,25 @@ function RoomManager({ showError }) {
                             <td>{editingId === r.id ? <select value={editForm.roomType} onChange={e => setEditForm({...editForm, roomType: e.target.value})}><option value="LECTURE">Lecture</option><option value="LAB">Lab</option><option value="THEATER">Theater</option></select> : <span className={`type-badge ${r.roomType.toLowerCase()}`}>{r.roomType}</span>}</td>
                             <td>{editingId === r.id ? <input type="number" value={editForm.floor} onChange={e => setEditForm({...editForm, floor: e.target.value})} /> : `Level ${r.floor}`}</td>
                             <td>{editingId === r.id ? <input type="number" value={editForm.capacity} onChange={e => setEditForm({...editForm, capacity: e.target.value})} /> : `${r.capacity} Seats`}</td>
-                            <td>{editingId === r.id ? <ActionButtons onSave={() => handleSave(r.id)} onCancel={() => setEditingId(null)} /> : <EditDeleteButtons onEdit={() => { setEditingId(r.id); setEditForm(r); }} onDelete={() => handleDelete(r.id)} />}</td>
+                            <td>{editingId === r.id ? <ActionButtons onSave={() => handleSave(r.id)} onCancel={() => setEditingId(null)} /> : <EditDeleteButtons onEdit={() => { setEditingId(r.id); setEditForm(r); }} onDelete={() => handleDeleteClick(r.id)} />}</td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            <ConfirmDeleteModal 
+                isOpen={deleteModalOpen} 
+                onClose={() => setDeleteModalOpen(false)} 
+                onConfirm={confirmDelete} 
+                title="Delete Room" 
+                message="Are you sure you want to delete this room?" 
+            />
         </div>
     );
 }
 
 // ==========================================
-// 4. SESSION MANAGER (UPDATED: Searchable Subjects)
+// 4. SESSION MANAGER 
 // ==========================================
 function SessionManager({ showError }) {
     const [sessions, setSessions] = useState([]);
@@ -271,6 +331,10 @@ function SessionManager({ showError }) {
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({ name: '', majorId: '', totalStudent: 30, subjectIds: [] });
     const [isAdding, setIsAdding] = useState(false);
+
+    // Modal States
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
 
     useEffect(() => {
         fetch(`${API_BASE}/session`).then(r => r.json()).then(setSessions);
@@ -288,14 +352,21 @@ function SessionManager({ showError }) {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Delete session?")) return;
-        
+    const handleDeleteClick = (id) => {
+        setItemToDelete(id);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
         try {
-            await apiFetch(`${API_BASE}/session/${id}`, { method: 'DELETE' });
-            setSessions(sessions.filter(s => s.id !== id));
+            await apiFetch(`${API_BASE}/session/${itemToDelete}`, { method: 'DELETE' });
+            setSessions(sessions.filter(s => s.id !== itemToDelete));
         } catch (error) {
             showError(error.message);
+        } finally {
+            setDeleteModalOpen(false);
+            setItemToDelete(null);
         }
     };
 
@@ -329,7 +400,6 @@ function SessionManager({ showError }) {
                             <tr key={s.id}>
                                 <td className="fw-500">{editingId === s.id ? <input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /> : s.name}</td>
                                 
-                                {/* Updated to use s.majorName safely */}
                                 <td>{editingId === s.id ? <select value={editForm.majorId} onChange={e => setEditForm({...editForm, majorId: e.target.value})}><option value="">Select Major...</option>{majors.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select> : <span className="subject-tag">{s.majorName || 'Unassigned'}</span>}</td>
                                 
                                 <td>
@@ -351,13 +421,20 @@ function SessionManager({ showError }) {
 
                                 <td>{editingId === s.id ? <input type="number" value={editForm.totalStudent} onChange={e => setEditForm({...editForm, totalStudent: e.target.value})} /> : `${s.totalStudent} Students`}</td>
                                 
-                                {/* Updated the Edit Button to correctly parse s.majorId */}
-                                <td>{editingId === s.id ? <ActionButtons onSave={() => handleSave(s.id)} onCancel={() => setEditingId(null)} /> : <EditDeleteButtons onEdit={() => { setEditingId(s.id); setEditForm({ name: s.name, majorId: s.majorId || '', totalStudent: s.totalStudent, subjectIds: s.subjects?.map(sub => sub.id) || [] }); }} onDelete={() => handleDelete(s.id)} />}</td>
+                                <td>{editingId === s.id ? <ActionButtons onSave={() => handleSave(s.id)} onCancel={() => setEditingId(null)} /> : <EditDeleteButtons onEdit={() => { setEditingId(s.id); setEditForm({ name: s.name, majorId: s.majorId || '', totalStudent: s.totalStudent, subjectIds: s.subjects?.map(sub => sub.id) || [] }); }} onDelete={() => handleDeleteClick(s.id)} />}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmDeleteModal 
+                isOpen={deleteModalOpen} 
+                onClose={() => setDeleteModalOpen(false)} 
+                onConfirm={confirmDelete} 
+                title="Delete Session" 
+                message="Are you sure you want to delete this session?" 
+            />
         </div>
     );
 }
@@ -407,7 +484,7 @@ function InlineSubjectSearch({ options, selectedIds, onChange }) {
 }
 
 // ==========================================
-// 5. SUBJECT MANAGER (UPDATED: Removed Major Link)
+// 5. SUBJECT MANAGER 
 // ==========================================
 function SubjectManager({ showError }) {
     const [subjects, setSubjects] = useState([]);
@@ -420,6 +497,10 @@ function SubjectManager({ showError }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({ subjectCode: '', name: '', totalWeeklyPeriod: 4, subjectType: 'MAJOR', isLabSubject: false });
+
+    // Delete Modal States
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
 
     const fetchSubjects = () => {
         fetch(`${API_BASE}/subject?sortBy=${sortBy}&sortDir=${sortDir}&size=100`)
@@ -476,14 +557,21 @@ function SubjectManager({ showError }) {
         } catch (error) { console.error("Error saving subject:", error); }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this subject?")) return;
-        
+    const handleDeleteClick = (id) => {
+        setItemToDelete(id);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
         try {
-            await apiFetch(`${API_BASE}/subject/${id}`, { method: 'DELETE' });
-            setSubjects(subjects.filter(s => (s.id || s.subjectCode) !== id));
+            await apiFetch(`${API_BASE}/subject/${itemToDelete}`, { method: 'DELETE' });
+            setSubjects(subjects.filter(s => (s.id || s.subjectCode) !== itemToDelete));
         } catch (error) {
             showError(error.message);
+        } finally {
+            setDeleteModalOpen(false);
+            setItemToDelete(null);
         }
     };
 
@@ -531,7 +619,7 @@ function SubjectManager({ showError }) {
                                 </td>
                                 <td>{s.totalWeeklyPeriod}</td>
                                 <td>
-                                    <EditDeleteButtons onEdit={() => openModalForEdit(s)} onDelete={() => handleDelete(rowId)} />
+                                    <EditDeleteButtons onEdit={() => openModalForEdit(s)} onDelete={() => handleDeleteClick(rowId)} />
                                 </td>
                             </tr>
                         )})
@@ -539,6 +627,7 @@ function SubjectManager({ showError }) {
                 </tbody>
             </table>
 
+            {/* Subject Edit/Add Modal */}
             {isModalOpen && (
                 <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
                     <div className="enterprise-modal" onClick={e => e.stopPropagation()}>
@@ -586,6 +675,14 @@ function SubjectManager({ showError }) {
                     </div>
                 </div>
             )}
+
+            <ConfirmDeleteModal 
+                isOpen={deleteModalOpen} 
+                onClose={() => setDeleteModalOpen(false)} 
+                onConfirm={confirmDelete} 
+                title="Delete Subject" 
+                message="Are you sure you want to delete this subject?" 
+            />
         </div>
     );
 }
@@ -607,6 +704,53 @@ function EditDeleteButtons({ onEdit, onDelete }) {
         <div className="action-cell">
             <button className="action-icon-btn edit" onClick={onEdit} title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
             <button className="action-icon-btn delete" onClick={onDelete} title="Delete"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+        </div>
+    );
+}
+
+// --- NEW SHARED REUSABLE DELETE MODAL ---
+function ConfirmDeleteModal({ isOpen, onClose, onConfirm, title, message }) {
+    if (!isOpen) return null;
+    
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="enterprise-modal" style={{ maxWidth: '360px', textAlign: 'center', padding: 0 }} onClick={e => e.stopPropagation()}>
+                <div className="modal-body" style={{ padding: '32px 24px 24px' }}>
+                    
+                    {/* Changed background to Light Orange (#FFF7ED) */}
+                    <div style={{ width: '56px', height: '56px', backgroundColor: '#FFF7ED', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                        
+                        {/* Changed icon stroke to Orange (#F97316) */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </div>
+                    
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#111827' }}>{title}</h3>
+                    <p style={{ margin: '0', fontSize: '14px', color: '#6B7280' }}>{message}</p>
+                </div>
+                
+                <div className="modal-footer" style={{ display: 'flex', gap: '12px', padding: '16px 24px', backgroundColor: '#F9FAFB', borderTop: '1px solid #E5E7EB', borderRadius: '0 0 12px 12px' }}>
+                    <button 
+                        className="btn-secondary" 
+                        style={{ flex: 1, justifyContent: 'center', padding: '10px 16px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: 'white', color: '#374151', cursor: 'pointer', fontWeight: 500 }} 
+                        onClick={onClose}
+                    >
+                        Cancel
+                    </button>
+                    
+                    {/* Changed button background to Orange (#F97316) and hover to Darker Orange (#EA580C) */}
+                    <button 
+                        style={{ flex: 1, justifyContent: 'center', padding: '10px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#F97316', color: 'white', cursor: 'pointer', fontWeight: 500, transition: 'background-color 0.2s' }} 
+                        onMouseOver={e => e.target.style.backgroundColor = '#EA580C'} 
+                        onMouseOut={e => e.target.style.backgroundColor = '#F97316'} 
+                        onClick={onConfirm}
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

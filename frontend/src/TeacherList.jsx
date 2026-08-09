@@ -33,6 +33,9 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
     const fileInputRef = useRef(null);
     const [isImageUploading, setIsImageUploading] = useState(false);
 
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [teacherToDelete, setTeacherToDelete] = useState(null);
+
         // NEW: Handler for uploading an image directly from the detail panel
         const handleDetailImageUpload = async (e) => {
             const file = e.target.files[0];
@@ -44,7 +47,7 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
                 formData.append('file', file);
                 
                 // Post directly to backend
-                const res = await fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}/upload-img`, {
+                const res = await fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}/upload-img`, {
                     method: 'POST',
                     body: formData
                 });
@@ -53,7 +56,7 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
                 
                 // Refresh main table and detail panel to fetch the new Cloud URL
                 fetchTeachers(); 
-                const detailRes = await fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}`);
+                const detailRes = await fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}`);
                 setTeacherDetail(await detailRes.json());
                 
             } catch (err) {
@@ -70,7 +73,7 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
             
             setIsImageUploading(true);
             try {
-                const res = await fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}/delete-img`, {
+                const res = await fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}/delete-img`, {
                     method: 'DELETE'
                 });
                 
@@ -78,7 +81,7 @@ const TeacherList = ({ onAddClick, onEditClick }) => {
                 
                 // Refresh table and detail panel to remove the image from the UI
                 fetchTeachers();
-                const detailRes = await fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}`);
+                const detailRes = await fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}`);
                 setTeacherDetail(await detailRes.json());
                 
             } catch (err) {
@@ -157,7 +160,7 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
 
     // Fetch standard periods for the grid structure on mount
     useEffect(() => {
-        fetch('http://localhost:8080/api/period')
+        fetch('http://localhost:8082/api/period')
             .then(res => res.json())
             .then(data => {
                 const lectures = data.filter(p => p.type === 'LECTURE' || p.type === 'lecture');
@@ -169,7 +172,7 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
     // Function to open the grid
     const openAvailabilityGrid = async (id) => {
         try {
-            const res = await fetch(`http://localhost:8080/api/teacher-availability/${id}`);
+            const res = await fetch(`http://localhost:8082/api/teacher-availability/${id}`);
             setTeacherGrid(await res.json());
             setGridModalOpen(true);
         } catch(e) { console.error("Failed to load availability", e); }
@@ -177,15 +180,15 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
 
     // Fetch Subjects for the filter dropdown
     useEffect(() => {
-        fetch('http://localhost:8080/api/subject/label').then(res => res.json()).then(setSubjects);
-        fetch('http://localhost:8080/api/department').then(res => res.json()).then(setDepartments); // Fetch departments
+        fetch('http://localhost:8082/api/subject/label').then(res => res.json()).then(setSubjects);
+        fetch('http://localhost:8082/api/department').then(res => res.json()).then(setDepartments); // Fetch departments
     }, []);
 
     const fetchTeachers = () => {
         setLoading(true);
 
         // Dynamically construct URL with JPA Specification filters
-        let url = `http://localhost:8080/api/teacher?sortBy=${sortBy}&sortDir=${sortDir}&page=0&size=50`;
+        let url = `http://localhost:8082/api/teacher?sortBy=${sortBy}&sortDir=${sortDir}&page=0&size=50`;
         if (filters.gender) url += `&gender=${filters.gender}`;
         if (filters.teacherType) url += `&teacherType=${filters.teacherType}`;
         if (filters.subjectId) url += `&subjectId=${filters.subjectId}`;
@@ -215,7 +218,7 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
         }
         
         setDetailLoading(true);
-        fetch(`http://localhost:8080/api/teacher/${selectedTeacherId}`)
+        fetch(`http://localhost:8082/api/teacher/${selectedTeacherId}`)
             .then(res => res.json())
             .then(data => {
                 setTeacherDetail(data);
@@ -233,21 +236,27 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
         setTimeout(() => setCopiedField(null), 2000); 
     };
 
-    const handleDelete = async (e, id) => {
+    // 1. Opens the modal instead of the browser alert
+    const handleDeleteClick = (e, id) => {
         e.stopPropagation();
-        if (window.confirm(`Are you sure you want to delete teacher ${id}? This action cannot be undone.`)) {
-            try {
-                // 1. Use the interceptor to catch the 409 Conflict
-                await apiFetch(`http://localhost:8080/api/teacher/${id}`, { method: 'DELETE' });
-                
-                // 2. Safely clear states upon success
-                if (selectedTeacherId === id) setSelectedTeacherId(null);
-                fetchTeachers();
-                
-            } catch (error) {
-                // 3. Gracefully surface the detailed error message
-                alert(`Deletion Blocked:\n\n${error.message}`);
-            }
+        setTeacherToDelete(id);
+        setDeleteModalOpen(true);
+    };
+
+    // 2. Actually deletes the teacher when they click "Delete" in the custom modal
+    const confirmDelete = async () => {
+        if (!teacherToDelete) return;
+        
+        try {
+            await apiFetch(`http://localhost:8082/api/teacher/${teacherToDelete}`, { method: 'DELETE' });
+            
+            if (selectedTeacherId === teacherToDelete) setSelectedTeacherId(null);
+            fetchTeachers();
+        } catch (error) {
+            alert(`Deletion Blocked:\n\n${error.message}`);
+        } finally {
+            setDeleteModalOpen(false);
+            setTeacherToDelete(null);
         }
     };
 
@@ -423,7 +432,8 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
                                                     <button className="action-icon-btn edit" title="Edit" onClick={(e) => { e.stopPropagation(); onEditClick(teacher.id); }}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                     </button>
-                                                    <button className="action-icon-btn delete" title="Delete" onClick={(e) => handleDelete(e, teacher.id)}>
+                                                    {/* Change onClick={(e) => handleDelete(e, teacher.id)} to this: */}
+                                                    <button className="action-icon-btn delete" title="Delete" onClick={(e) => handleDeleteClick(e, teacher.id)}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                                     </button>
                                                 </td>
@@ -608,6 +618,25 @@ const EnterpriseSearchableSelect = ({ options, value, onChange, placeholder, sea
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
+            {deleteModalOpen && (
+                <div className="filter-overlay" onClick={() => setDeleteModalOpen(false)}>
+                    <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                        <div className="confirm-modal-content">
+                            <div className="confirm-icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </div>
+                            <h3>Delete Teacher</h3>
+                            <p>Do you delete this Teacher?</p>
+                        </div>
+                        <div className="confirm-modal-actions">
+                            <button className="btn-secondary" onClick={() => setDeleteModalOpen(false)}>Cancel</button>
+                            <button className="btn-primary danger-btn" onClick={confirmDelete}>Delete</button>
                         </div>
                     </div>
                 </div>

@@ -220,8 +220,8 @@ export default function Timetable() {
   const fetchLookups = async () => {
     try {
         const [rRes, sRes] = await Promise.all([
-            fetch('http://localhost:8080/api/room'),
-            fetch('http://localhost:8080/api/subject/label')
+            fetch('http://localhost:8082/api/room'),
+            fetch('http://localhost:8082/api/subject/label')
         ]);
         if (rRes.ok) setRooms(await rRes.json());
         if (sRes.ok) setSubjects(await sRes.json());
@@ -230,7 +230,7 @@ export default function Timetable() {
 
   const checkInitialSolverStatus = async () => {
     try {
-        const res = await fetch('http://localhost:8080/api/timetable/status');
+        const res = await fetch('http://localhost:8082/api/timetable/status');
         const data = await res.json();
         if (data.status === 'SOLVING_ACTIVE' || data.status === 'SOLVING_SCHEDULED') {
             setIsLoading(true);
@@ -242,7 +242,7 @@ export default function Timetable() {
 
   const fetchPeriods = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/period');
+      const res = await fetch('http://localhost:8082/api/period');
       if (res.ok) {
         const data = await res.json();
         setClassPeriods(data.sort((a, b) => a.startTime.localeCompare(b.startTime)));
@@ -252,14 +252,14 @@ export default function Timetable() {
 
   const fetchSessions = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/session');
+      const res = await fetch('http://localhost:8082/api/session');
       if (res.ok) setSessions(await res.json());
     } catch (error) { console.error("Error fetching sessions", error); }
   };
 
   const fetchTeachers = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/teacher?size=1000');
+      const res = await fetch('http://localhost:8082/api/teacher?size=1000');
       if (res.ok) {
         const data = await res.json();
         setTeachers(data.content || data);
@@ -270,7 +270,7 @@ export default function Timetable() {
   const fetchTimetable = async (sessionId) => {
     setIsLoading(true);
     try {
-        const res = await fetch(`http://localhost:8080/api/timetable/session/${sessionId}`);
+        const res = await fetch(`http://localhost:8082/api/timetable/session/${sessionId}`);
         if (res.ok) setTimetableSlots(await res.json());
         else setTimetableSlots([]);
     } catch (error) {
@@ -287,7 +287,7 @@ export default function Timetable() {
 
   const pollSolverStatus = async () => {
     try {
-        const res = await fetch('http://localhost:8080/api/timetable/status');
+        const res = await fetch('http://localhost:8082/api/timetable/status');
         const data = await res.json();
         
         if (data.status === 'SOLVING_ACTIVE' || data.status === 'SOLVING_SCHEDULED') {
@@ -314,7 +314,7 @@ export default function Timetable() {
     setGenerationError(null);
     
     try {
-        const res = await fetch(`http://localhost:8080/api/timetable/generate/all`, { 
+        const res = await fetch(`http://localhost:8082/api/timetable/generate/all`, { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ excludedTeacherIds: excludedTeacherIds })
@@ -343,7 +343,7 @@ export default function Timetable() {
     
     setIsLoading(true);
     try {
-        await apiFetch(`http://localhost:8080/api/timetable/session/${selectedSessionId}/publish`, { method: 'POST' });
+        await apiFetch(`http://localhost:8082/api/timetable/session/${selectedSessionId}/publish`, { method: 'POST' });
         showNotification('Schedule published successfully!');
         fetchTimetable(selectedSessionId); 
     } catch (error) { 
@@ -357,7 +357,7 @@ export default function Timetable() {
   const executeDeletion = async (endpoint, successMessage) => {
     setIsLoading(true);
     try {
-        await apiFetch(`http://localhost:8080/api/timetable/${endpoint}`, { method: 'DELETE' });
+        await apiFetch(`http://localhost:8082/api/timetable/${endpoint}`, { method: 'DELETE' });
         showNotification(successMessage);
         if (selectedSessionId) fetchTimetable(selectedSessionId);
     } catch (err) {
@@ -413,7 +413,7 @@ export default function Timetable() {
     try {
         if (targetSlots.length > 0) {
             const targetSlotId = targetSlots[0].id;
-            await apiFetch(`http://localhost:8080/api/timetable/slot/swap`, {
+            await apiFetch(`http://localhost:8082/api/timetable/slot/swap`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ slotId1: sourceSlotId, slotId2: targetSlotId })
@@ -428,7 +428,7 @@ export default function Timetable() {
                 subjectId: sourceSlot.subjectId,
                 teacherId: sourceSlot.teacherId
             };
-            await apiFetch(`http://localhost:8080/api/timetable/slot/${sourceSlotId}`, {
+            await apiFetch(`http://localhost:8082/api/timetable/slot/${sourceSlotId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -473,12 +473,12 @@ export default function Timetable() {
       setIsLoading(true);
       try {
           if (slotModal.mode === 'ADD') {
-              await apiFetch(`http://localhost:8080/api/timetable/slot`, {
+              await apiFetch(`http://localhost:8082/api/timetable/slot`, {
                   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
               });
               showNotification('Slot manually added.');
           } else {
-              await apiFetch(`http://localhost:8080/api/timetable/slot/${slotModal.slotId}`, {
+              await apiFetch(`http://localhost:8082/api/timetable/slot/${slotModal.slotId}`, {
                   method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
               });
               showNotification('Slot successfully updated.');
@@ -497,7 +497,7 @@ export default function Timetable() {
       if (!window.confirm("Remove this slot from the timetable?")) return;
       setIsLoading(true);
       try {
-          await apiFetch(`http://localhost:8080/api/timetable/slot/${slotModal.slotId}`, { method: 'DELETE' });
+          await apiFetch(`http://localhost:8082/api/timetable/slot/${slotModal.slotId}`, { method: 'DELETE' });
           showNotification('Slot removed.');
           setSlotModal({ ...slotModal, isOpen: false });
           fetchTimetable(selectedSessionId);
@@ -517,7 +517,7 @@ export default function Timetable() {
         const reqEndTime = periodForm.endTime.length === 5 ? periodForm.endTime + ":00" : periodForm.endTime;
         const payload = { ...periodForm, startTime: reqStartTime, endTime: reqEndTime };
         
-        await apiFetch('http://localhost:8080/api/period', {
+        await apiFetch('http://localhost:8082/api/period', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         showNotification('Class Period successfully added!');
@@ -529,7 +529,7 @@ export default function Timetable() {
   const handleDeletePeriod = async (id) => {
       if(!window.confirm("Delete this period structure? This might break existing timetables!")) return;
       try {
-          await apiFetch(`http://localhost:8080/api/period/${id}`, { method: 'DELETE' });
+          await apiFetch(`http://localhost:8082/api/period/${id}`, { method: 'DELETE' });
           showNotification('Period removed.');
           fetchPeriods();
       } catch(err) { showNotification(err.message, 'error'); }

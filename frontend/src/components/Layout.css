@@ -43,7 +43,8 @@
   flex-direction: column;
   overflow-y: auto;
   /* We remove the right padding so the active item touches the main content */
-  padding: 0 0 0 16px; 
+  padding: 0 0 0 16px;
+  flex: 1; /* Add this line to push the footer to the bottom */
   
   /* --- Add these to hide the scrollbar visually --- */
   scrollbar-width: none; /* Firefox */
@@ -153,6 +154,10 @@
   border-bottom: 1px solid #E5E7EB;
 }
 
+.topbar .nspu-logo {
+  width: 60px;
+}
+
 .search-bar {
   display: flex;
   align-items: center;
@@ -246,4 +251,76 @@
   flex: 1;
   padding: 32px; 
   overflow-y: auto;
+}
+
+/* --- MEMBERS BUTTON & DROP-UP --- */
+.sidebar-footer {
+    padding: 20px;
+    position: relative; /* Acts as the anchor for the popup */
+}
+
+.members-btn {
+    width: 100%;
+    background-color: white;
+    color: #8A33C9; /* Matches your purple theme */
+    border: none;
+    border-radius: 20px;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.members-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.arrow-icon {
+    transition: transform 0.3s ease;
+}
+
+/* Rotates the arrow to point UP when the menu is open */
+.arrow-icon.open {
+    transform: rotate(-90deg); 
+}
+
+/* The Drop-Up Menu */
+.members-popup {
+    position: absolute;
+    bottom: 80px; /* Positions it exactly above the button */
+    left: 20px;
+    right: 20px;
+    background-color: white;
+    border-radius: 12px;
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15); /* Shadow points up */
+    animation: popUp 0.2s ease-out;
+    z-index: 10;
+}
+
+.members-popup li {
+    padding: 12px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.members-popup li:last-child {
+    border-bottom: none;
+}
+
+@keyframes popUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

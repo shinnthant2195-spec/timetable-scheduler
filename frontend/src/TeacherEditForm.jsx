@@ -28,10 +28,10 @@ const TeacherEditForm = ({ teacherId, onComplete, onCancel }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/subject/label').then(res => res.json()).then(setSubjects);
-        fetch('http://localhost:8080/api/department').then(res => res.json()).then(setDepartments); // NEW FETCH
+        fetch('http://localhost:8082/api/subject/label').then(res => res.json()).then(setSubjects);
+        fetch('http://localhost:8082/api/department').then(res => res.json()).then(setDepartments); // NEW FETCH
         
-        fetch(`http://localhost:8080/api/teacher/${teacherId}`)
+        fetch(`http://localhost:8082/api/teacher/${teacherId}`)
             .then(res => res.json())
             .then(data => {
                 setFormData({
@@ -84,7 +84,7 @@ const TeacherEditForm = ({ teacherId, onComplete, onCancel }) => {
                 department: formData.department ? parseInt(formData.department) : null // ADD THIS
             };
             
-            const response = await fetch(`http://localhost:8080/api/teacher/${teacherId}`, {
+            const response = await fetch(`http://localhost:8082/api/teacher/${teacherId}`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
             });
             if (!response.ok) throw new Error("Update failed");
