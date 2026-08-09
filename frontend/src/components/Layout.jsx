@@ -1,5 +1,7 @@
 
 // src/components/Layout.jsx
+import React, { useState } from 'react';
+// src/components/Layout.jsx
 import './Layout.css';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,6 +19,9 @@ import profileImage from '../assets/photo_2026-08-08_14-52-47.jpg';
 import logoImage from "../assets/nspu logo.png";
 
 function Layout({ activePage, setActivePage, children, onLogout, username = "Guest User" }) {
+
+    // Add this new state for the Members dropdown:
+    const [isMembersOpen, setIsMembersOpen] = useState(false);
     
     return (
         <div className="layout-container">
@@ -64,6 +69,30 @@ function Layout({ activePage, setActivePage, children, onLogout, username = "Gue
                         </ul>
                     </nav>
                 </div>
+                
+                {/* --- NEW MEMBERS FOOTER --- */}
+                <div className="sidebar-footer">
+                    {/* The Popup Menu */}
+                    {isMembersOpen && (
+                        <ul className="members-popup">
+                            <li>Shinn Thant</li>
+                            <li>Kent Linn Naung</li>
+                        </ul>
+                    )}
+
+                    {/* The Toggle Button */}
+                    <button className="members-btn" onClick={() => setIsMembersOpen(!isMembersOpen)}>
+                        <svg 
+                            className={`arrow-icon ${isMembersOpen ? 'open' : ''}`} 
+                            width="14" height="14" viewBox="0 0 24 24" fill="none" 
+                            stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                        >
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                        Members
+                    </button>
+                </div>
+
             </aside>
             
             {/* Main Content Window */}
