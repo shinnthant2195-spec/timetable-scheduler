@@ -93,26 +93,4 @@ public class TimetableValidationService {
             }
         }
     }
-
-        /*
-        for (TimetableSlot existing : potentialConflicts) {
-
-            // 3. Room Conflict Check
-            if (existing.getRoom().getId().equals(room.getId())) {
-                boolean isSharedClass = existing.getSubject().getId().equals(subject.getId()) &&
-                                        existing.getTeacher().getId().equals(teacher.getId());
-                if (!isSharedClass) {
-                    throw new IllegalArgumentException("Room '" + room.getName() + "' is double-booked by another class.");
-                } else {
-                    // It is a valid shared class! Add this existing session's students to our aggregate count
-                    aggregatedStudentCount += existing.getSession().getTotalStudent();
-                }
-            }
-        }
-
-        // 4. Aggregated Room Capacity Check
-        if (aggregatedStudentCount > room.getCapacity()) {
-            throw new IllegalArgumentException("Combined session sizes (" + aggregatedStudentCount + ") exceed Room '" + room.getName() + "' capacity (" + room.getCapacity() + ").");
-        }
-         */
 }

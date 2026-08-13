@@ -419,7 +419,7 @@ export default function Timetable() {
 
                 // SWAP MODE: Target is occupied by a Major/Minor, or we are dragging a Major/Minor.
                 const targetSlotId = targetSlots[0].id;
-                await apiFetch(`http://localhost:8080/api/timetable/slot/swap`, {
+                await apiFetch(`http://localhost:8082/api/timetable/slot/swap`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ slotId1: sourceSlotId, slotId2: targetSlotId })
@@ -438,7 +438,7 @@ export default function Timetable() {
                     teacherId: sourceSlot.teacherId
                 };
 
-                await apiFetch(`http://localhost:8080/api/timetable/slot/${sourceSlotId}`, {
+                await apiFetch(`http://localhost:8082/api/timetable/slot/${sourceSlotId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
