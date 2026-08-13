@@ -270,8 +270,8 @@ public class TimefoldSolverService {
         // the board before attempting to place them in each other's spaces.
         List<Long> swappingIds = List.of(slotId1, slotId2);
 
-        validationService.validateManualPlacement(slot1.getTeacher(), slot1.getSession(), room2, slot1.getSubject(), day2, period2, swappingIds);
-        validationService.validateManualPlacement(slot2.getTeacher(), slot2.getSession(), room1, slot2.getSubject(), day1, period1, swappingIds);
+        validationService.validateManualPlacement(slot1.getTeacher(), slot1.getSession(), room1, slot1.getSubject(), day2, period2, swappingIds);
+        validationService.validateManualPlacement(slot2.getTeacher(), slot2.getSession(), room2, slot2.getSubject(), day1, period1, swappingIds);
 
         slot1.setDayOfWeek(day2);
         slot1.setClassPeriod(period2);

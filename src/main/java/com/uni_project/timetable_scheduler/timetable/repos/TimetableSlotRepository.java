@@ -26,6 +26,7 @@ public interface TimetableSlotRepository extends JpaRepository<TimetableSlot, Lo
     void deleteDraftsBySessionId(@Param("sessionId") Integer sessionId);
 
     // Highly optimized fetch for the React Grid (Avoids N+1 Query Problem)
+    // Highly optimized fetch for the React Grid (Avoids N+1 Query Problem)
     @Query("SELECT new com.uni_project.timetable_scheduler.timetable.dto.TimetableSlotResponseDTO(" +
             "t.id, t.dayOfWeek, t.classPeriod.id, t.subject.id, t.subject.subjectCode, t.subject.name, " +
             "t.subject.subjectType, " + // <-- ADD THIS
