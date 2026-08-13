@@ -394,54 +394,67 @@ export default function Timetable() {
       e.dataTransfer.setData('sourceSlotId', slot.id);
   };
 
-  const onDragOver = (e) => e.preventDefault(); 
+  const onDragOver = (e) => e.preventDefault();
 
-  const onDrop = async (e, targetDay, targetPeriod) => {
-    e.preventDefault();
-    const sourceSlotIdStr = e.dataTransfer.getData('sourceSlotId');
-    if (!sourceSlotIdStr) return;
-    const sourceSlotId = parseInt(sourceSlotIdStr, 10);
+    const onDrop = async (e, targetDay, targetPeriod) => {
+        e.preventDefault();
+        const sourceSlotIdStr = e.dataTransfer.getData('sourceSlotId');
+        if (!sourceSlotIdStr) return;
+        const sourceSlotId = parseInt(sourceSlotIdStr, 10);
+        const sourceSlot = timetableSlots.find(s => s.id === sourceSlotId);
+        if (!sourceSlot) return;
 
-    const sourceSlot = timetableSlots.find(s => s.id === sourceSlotId);
-    if (!sourceSlot) return;
+        if (sourceSlot.dayOfWeek === targetDay && sourceSlot.classPeriodId === targetPeriod.id) return;
 
-    if (sourceSlot.dayOfWeek === targetDay && sourceSlot.classPeriodId === targetPeriod.id) return;
+        const targetSlots = getSlotsForCell(targetDay, targetPeriod.id);
+        setIsLoading(true);
 
-    const targetSlots = getSlotsForCell(targetDay, targetPeriod.id);
+        try {
+            // --- ENTERPRISE SMART DROP LOGIC ---
+            const isSourceElective = sourceSlot.subjectType === 'ELECTIVE';
+            const areTargetSlotsElective = targetSlots.length > 0 && targetSlots.every(s => s.subjectType === 'ELECTIVE');
 
-    setIsLoading(true);
-    try {
-        if (targetSlots.length > 0) {
-            const targetSlotId = targetSlots[0].id;
-            await apiFetch(`http://localhost:8082/api/timetable/slot/swap`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ slotId1: sourceSlotId, slotId2: targetSlotId })
-            });
-            showNotification('Slots swapped successfully.');
-        } else {
-            const payload = {
-                dayOfWeek: targetDay,
-                classPeriodId: targetPeriod.id,
-                roomId: sourceSlot.roomId,
-                sessionId: selectedSessionId,
-                subjectId: sourceSlot.subjectId,
-                teacherId: sourceSlot.teacherId
-            };
-            await apiFetch(`http://localhost:8082/api/timetable/slot/${sourceSlotId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            showNotification('Slot moved successfully.');
+            // Check if we should SWAP or INTEGRATE
+            if (targetSlots.length > 0 && !(isSourceElective && areTargetSlotsElective)) {
+
+                // SWAP MODE: Target is occupied by a Major/Minor, or we are dragging a Major/Minor.
+                const targetSlotId = targetSlots[0].id;
+                await apiFetch(`http://localhost:8080/api/timetable/slot/swap`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slotId1: sourceSlotId, slotId2: targetSlotId })
+                });
+                showNotification('Slots swapped successfully.');
+
+            } else {
+
+                // INTEGRATION / MOVE MODE: Target is empty, OR we are merging Electives together.
+                const payload = {
+                    dayOfWeek: targetDay,
+                    classPeriodId: targetPeriod.id,
+                    roomId: sourceSlot.roomId, // Crucial: Retains its original room during the merge
+                    sessionId: selectedSessionId,
+                    subjectId: sourceSlot.subjectId,
+                    teacherId: sourceSlot.teacherId
+                };
+
+                await apiFetch(`http://localhost:8080/api/timetable/slot/${sourceSlotId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                showNotification(targetSlots.length > 0 ? 'Elective integrated successfully.' : 'Slot moved successfully.');
+            }
+
+            fetchTimetable(selectedSessionId);
+
+        } catch(err) {
+            setGenerationError(err.message);
+        } finally {
+            setIsLoading(false);
         }
-        fetchTimetable(selectedSessionId);
-    } catch(err) {
-        setGenerationError(err.message); 
-    } finally {
-        setIsLoading(false);
-    }
-  };
+    };
 
   // --- MANUAL SLOT MODAL HANDLERS ---
   const openAddSlotModal = (day, periodId) => {
