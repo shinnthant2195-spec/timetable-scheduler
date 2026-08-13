@@ -1,5 +1,6 @@
 package com.uni_project.timetable_scheduler.timetable.dto;
 
+import com.uni_project.timetable_scheduler.subject.Subject;
 import com.uni_project.timetable_scheduler.timetable.entities.TimetableSlot;
 
 import java.time.DayOfWeek;
@@ -11,6 +12,7 @@ public record TimetableSlotResponseDTO(
         Integer subjectId,
         String subjectCode,
         String subjectName,
+        Subject.SubjectType subjectType,
         String teacherId,
         String teacherName,
         Integer roomId,
