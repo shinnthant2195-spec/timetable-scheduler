@@ -163,7 +163,7 @@ export default function Timetable() {
 
   // Manual Slot Modal States
   const [slotModal, setSlotModal] = useState({ isOpen: false, mode: 'ADD', slotId: null, dayOfWeek: '', classPeriodId: '' });
-  const [slotForm, setSlotForm] = useState({ subjectId: '', teacherId: '', roomId: '' });
+  const [slotForm, setSlotForm] = useState({ subjectId: '', teacherId: '', roomId: '', requiresLab: false });
 
   // Danger Menu States
   const [dangerMenuOpen, setDangerMenuOpen] = useState(false);
@@ -435,7 +435,8 @@ export default function Timetable() {
                     roomId: sourceSlot.roomId, // Crucial: Retains its original room during the merge
                     sessionId: selectedSessionId,
                     subjectId: sourceSlot.subjectId,
-                    teacherId: sourceSlot.teacherId
+                    teacherId: sourceSlot.teacherId,
+                    requiresLab: sourceSlot.requiresLab
                 };
 
                 await apiFetch(`http://localhost:8082/api/timetable/slot/${sourceSlotId}`, {
@@ -457,16 +458,16 @@ export default function Timetable() {
     };
 
   // --- MANUAL SLOT MODAL HANDLERS ---
-  const openAddSlotModal = (day, periodId) => {
-      if (!selectedSessionId) return;
-      setSlotModal({ isOpen: true, mode: 'ADD', slotId: null, dayOfWeek: day, classPeriodId: periodId });
-      setSlotForm({ subjectId: '', teacherId: '', roomId: '' });
-  };
+    const openAddSlotModal = (day, periodId) => {
+        if (!selectedSessionId) return;
+        setSlotModal({ isOpen: true, mode: 'ADD', slotId: null, dayOfWeek: day, classPeriodId: periodId });
+        setSlotForm({ subjectId: '', teacherId: '', roomId: '', requiresLab: false });
+    };
 
-  const openEditSlotModal = (slot) => {
-      setSlotModal({ isOpen: true, mode: 'EDIT', slotId: slot.id, dayOfWeek: slot.dayOfWeek, classPeriodId: slot.classPeriodId });
-      setSlotForm({ subjectId: slot.subjectId, teacherId: slot.teacherId, roomId: slot.roomId });
-  };
+    const openEditSlotModal = (slot) => {
+        setSlotModal({ isOpen: true, mode: 'EDIT', slotId: slot.id, dayOfWeek: slot.dayOfWeek, classPeriodId: slot.classPeriodId });
+        setSlotForm({ subjectId: slot.subjectId, teacherId: slot.teacherId, roomId: slot.roomId, requiresLab: slot.requiresLab || false });
+    };
 
   const handleSaveSlot = async (e) => {
       e.preventDefault();
@@ -480,7 +481,8 @@ export default function Timetable() {
           sessionId: selectedSessionId,
           subjectId: slotForm.subjectId,
           teacherId: slotForm.teacherId,
-          roomId: slotForm.roomId
+          roomId: slotForm.roomId,
+          requiresLab: slotForm.requiresLab // <-- Send UI choice to backend
       };
 
       setIsLoading(true);
@@ -573,9 +575,9 @@ export default function Timetable() {
 
   const roomOptions = rooms.map(r => ({ value: r.id, label: r.name }));
   const currentSession = sessions.find(s => String(s.id) === String(selectedSessionId));
-  const subjectOptions = currentSession && currentSession.subjects 
-      ? currentSession.subjects.map(s => ({ value: s.id, label: `${s.name} (${s.subjectCode})` }))
-      : subjects.map(s => ({ value: s.id, label: `${s.name} (${s.subjectCode})` }));
+  const subjectOptions = currentSession && currentSession.subjects
+      ? currentSession.subjects.map(s => ({ value: s.id, label: `${s.name} (${s.subjectCode})`, labPeriods: s.labPeriods }))
+      : subjects.map(s => ({ value: s.id, label: `${s.name} (${s.subjectCode})`, labPeriods: s.labPeriods }));
 
   const blockTypeOptions = [
     { value: 'LECTURE', label: 'LECTURE (Instructional Time)' },
@@ -643,8 +645,46 @@ export default function Timetable() {
                     <form onSubmit={handleSaveSlot} className="period-form">
                         <div className="form-group" style={{marginBottom: '16px'}}>
                             <label>Subject</label>
-                            <CustomDropdown options={subjectOptions} value={slotForm.subjectId} onChange={val => setSlotForm({...slotForm, subjectId: val})} placeholder="Select Subject" />
+                            <CustomDropdown
+                                options={subjectOptions}
+                                value={slotForm.subjectId}
+                                onChange={val => {
+                                    const selectedSub = subjectOptions.find(s => s.value === val);
+                                    setSlotForm({
+                                        ...slotForm,
+                                        subjectId: val,
+                                        // Auto-reset to false if they pick a strictly lecture subject
+                                        requiresLab: selectedSub && selectedSub.labPeriods === 0 ? false : slotForm.requiresLab
+                                    });
+                                }}
+                                placeholder="Select Subject"
+                            />
                         </div>
+                        {/* NEW: Contextual Lab Toggle */}
+                        {(() => {
+                            // ADD String() casts for perfect type safety
+                            const selectedSub = subjectOptions.find(s => String(s.value) === String(slotForm.subjectId));
+
+                            if (selectedSub && selectedSub.labPeriods > 0) {
+                                return (
+                                    <div className="form-group" style={{marginBottom: '16px'}}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', backgroundColor: '#FFF7ED', padding: '12px', border: '1px solid #F97316', borderRadius: '8px' }}>
+                                            <input
+                                                type="checkbox"
+                                                style={{ width: '18px', height: '18px', accentColor: '#EA580C' }}
+                                                checked={slotForm.requiresLab}
+                                                onChange={e => setSlotForm({...slotForm, requiresLab: e.target.checked})}
+                                            />
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <strong style={{ fontSize: '13px', color: '#7C2D12' }}>Assign as Laboratory Block</strong>
+                                                <span style={{ fontSize: '11px', color: '#9A3412' }}>This subject requires {selectedSub.labPeriods} dedicated lab block(s).</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
                         <div className="form-group" style={{marginBottom: '16px'}}>
                             <label>Teacher</label>
                             <CustomDropdown options={teacherOptions} value={slotForm.teacherId} onChange={val => setSlotForm({...slotForm, teacherId: val})} placeholder="Select Teacher" />
@@ -673,17 +713,17 @@ export default function Timetable() {
       <div className="timetable-header">
         <div className="header-left">
           <h2>Timetable Engine</h2>
-          <p>Generate globally, adjust locally, and manage class periods.</p>
+          <p>Configure Timetable Structure and generate for all sessions</p>
         </div>
         <div className="header-right" style={{ display: 'flex', gap: '12px' }}>
                      
           <button className="action-btn generate-btn" onClick={handleGenerate} disabled={isLoading}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            {isLoading ? 'Running Timefold AI...' : 'Run Global AI Solver'}
+            {isLoading ? 'Running Timefold AI...' : 'Generate Schedule'}
           </button>
           <button className="secondary-btn icon-btn" onClick={() => setShowPeriodModal(true)}>
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-             Schedule Dictionary
+             Configure Schedule
           </button>
         </div>
       </div>
@@ -816,7 +856,17 @@ export default function Timetable() {
                                       border: `1px solid ${sStyle.border}`
                                     }}
                                   >
-                                    <div className="slot-subject" style={{ color: sStyle.text }}>{slot.subjectCode || slot.subjectName}</div>
+                                      {/* Updated grid layout for the badge */}
+                                      <div className="slot-subject" style={{ color: sStyle.text, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {slot.subjectCode || slot.subjectName}
+                                        </span>
+                                          {slot.requiresLab && (
+                                              <span style={{ backgroundColor: '#FEE2E2', color: '#991B1B', fontSize: '8px', padding: '2px 4px', borderRadius: '4px', border: '1px solid #FCA5A5', flexShrink: 0 }}>
+                                                LAB
+                                            </span>
+                                          )}
+                                      </div>
                                     <div className="slot-teacher">
                                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
                                       {slot.roomName}
@@ -874,7 +924,7 @@ export default function Timetable() {
         <div className="modal-overlay" onClick={() => setShowPeriodModal(false)}>
           <div className="floating-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Schedule Dictionary</h3>
+              <h3>Schedule Configuration</h3>
               <button className="tm-modal-close-btn" onClick={() => setShowPeriodModal(false)} title="Close">✕</button>
             </div>
             

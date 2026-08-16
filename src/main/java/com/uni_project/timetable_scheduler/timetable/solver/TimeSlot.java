@@ -23,6 +23,8 @@ public class TimeSlot {
     @PlanningVariable(valueRangeProviderRefs = "roomRange")
     private RoomFact room;
 
+    private Boolean requiresLab = false;
+
     public TimeSlot() {}
 
     public TimeSlot(Long id, List<SessionFact> sessions, SubjectFact subject, TeacherFact teacher) {
@@ -83,5 +85,13 @@ public class TimeSlot {
     public int getTotalStudentCount() {
         if (sessions == null) return 0;
         return sessions.stream().mapToInt(SessionFact::totalStudent).sum();
+    }
+
+    public Boolean getRequiresLab() {
+        return requiresLab;
+    }
+
+    public void setRequiresLab(Boolean requiresLab) {
+        this.requiresLab = requiresLab;
     }
 }

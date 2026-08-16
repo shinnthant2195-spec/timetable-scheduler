@@ -33,7 +33,7 @@ export default function UniversityConfigManager() {
             <div className="config-header">
                 <div>
                     <h2>University Configuration</h2>
-                    <p>Manage core institutional data: Departments, Majors, Rooms, Sessions, and Subjects.</p>
+                    <p>Manage institutional data: Departments, Majors, Rooms, Subjects and Sessions.</p>
                 </div>
             </div>
 
@@ -484,19 +484,20 @@ function InlineSubjectSearch({ options, selectedIds, onChange }) {
 }
 
 // ==========================================
-// 5. SUBJECT MANAGER 
+// 5. SUBJECT MANAGER
 // ==========================================
 function SubjectManager({ showError }) {
     const [subjects, setSubjects] = useState([]);
-    
+
     // Sort States
     const [sortBy, setSortBy] = useState('subjectCode');
     const [sortDir, setSortDir] = useState('asc');
-    
+
     // Modal & Form States
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
-    const [editForm, setEditForm] = useState({ subjectCode: '', name: '', totalWeeklyPeriod: 4, subjectType: 'MAJOR', isLabSubject: false });
+    // UPDATED: Replaced isLabSubject with labPeriods
+    const [editForm, setEditForm] = useState({ subjectCode: '', name: '', totalWeeklyPeriod: 4, subjectType: 'MAJOR', labPeriods: 0 });
 
     // Delete Modal States
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -523,19 +524,20 @@ function SubjectManager({ showError }) {
 
     const openModalForAdd = () => {
         setEditingId(null);
-        setEditForm({ subjectCode: '', name: '', totalWeeklyPeriod: 4, subjectType: 'MAJOR', isLabSubject: false });
+        // UPDATED: Reset labPeriods to 0
+        setEditForm({ subjectCode: '', name: '', totalWeeklyPeriod: 4, subjectType: 'MAJOR', labPeriods: 0 });
         setIsModalOpen(true);
     };
 
     const openModalForEdit = (subject) => {
         const rowId = subject.id || subject.subjectCode;
         setEditingId(rowId);
-        setEditForm({ 
-             subjectCode: subject.subjectCode, 
-             name: subject.name, 
-             totalWeeklyPeriod: subject.totalWeeklyPeriod, 
-             subjectType: subject.subjectType, 
-             isLabSubject: subject.isLabSubject || false
+        setEditForm({
+            subjectCode: subject.subjectCode,
+            name: subject.name,
+            totalWeeklyPeriod: subject.totalWeeklyPeriod,
+            subjectType: subject.subjectType,
+            labPeriods: subject.labPeriods || 0 // UPDATED
         });
         setIsModalOpen(true);
     };
@@ -543,13 +545,14 @@ function SubjectManager({ showError }) {
     const handleSave = async () => {
         const url = editingId ? `${API_BASE}/subject/${editingId}` : `${API_BASE}/subject`;
         const method = editingId ? 'PUT' : 'POST';
-        
+
         try {
-            const res = await fetch(url, { 
-                 method: method, 
-                 headers: { 'Content-Type': 'application/json' }, 
-                 body: JSON.stringify(editForm) 
-             });
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm)
+            });
+
             if (res.ok) {
                 fetchSubjects();
                 setIsModalOpen(false);
@@ -581,24 +584,24 @@ function SubjectManager({ showError }) {
                 <h3>Curriculum Course Catalog</h3>
                 <button className="btn-primary" onClick={openModalForAdd}>+ Add Subject</button>
             </div>
-            
+
             <table className="data-table">
                 <thead>
-                    <tr>
-                        <th onClick={() => handleSort('subjectCode')} className="sortable">Code {renderSortIcon('subjectCode')}</th>
-                        <th onClick={() => handleSort('name')} className="sortable">Subject Name {renderSortIcon('name')}</th>
-                        <th onClick={() => handleSort('subjectType')} className="sortable">Type / Lab {renderSortIcon('subjectType')}</th>
-                        <th onClick={() => handleSort('totalWeeklyPeriod')} className="sortable">Weekly Periods {renderSortIcon('totalWeeklyPeriod')}</th>
-                        <th className="actions-col">Actions</th>
-                    </tr>
+                <tr>
+                    <th onClick={() => handleSort('subjectCode')} className="sortable">Code {renderSortIcon('subjectCode')}</th>
+                    <th onClick={() => handleSort('name')} className="sortable">Subject Name {renderSortIcon('name')}</th>
+                    <th onClick={() => handleSort('subjectType')} className="sortable">Type / Lab {renderSortIcon('subjectType')}</th>
+                    <th onClick={() => handleSort('totalWeeklyPeriod')} className="sortable">Weekly Periods {renderSortIcon('totalWeeklyPeriod')}</th>
+                    <th className="actions-col">Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {subjects.length === 0 ? (
-                        <tr><td colSpan="5" style={{textAlign: 'center', padding: '40px', color: '#6B7280'}}>No subjects available.</td></tr>
-                    ) : (
-                        subjects.map(s => {
-                            const rowId = s.id || s.subjectCode; 
-                            return (
+                {subjects.length === 0 ? (
+                    <tr><td colSpan="5" style={{textAlign: 'center', padding: '40px', color: '#6B7280'}}>No subjects available.</td></tr>
+                ) : (
+                    subjects.map(s => {
+                        const rowId = s.id || s.subjectCode;
+                        return (
                             <tr key={rowId}>
                                 <td><span className="badge-id">{s.subjectCode}</span></td>
                                 <td className="fw-500">{s.name}</td>
@@ -607,12 +610,10 @@ function SubjectManager({ showError }) {
                                     <span className={`type-badge ${s.subjectType.toLowerCase()}`}>
                                         {s.subjectType}
                                     </span>
-                                        {s.isLabSubject && (
-                                            <span className="lab-badge" title="Requires Laboratory Facility">
-                                                <svg className="lab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M10 2v7.31"></path><path d="M14 9.3V1.99"></path><path d="M8.5 2h7"></path><path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path><path d="M5.52 16h12.96"></path>
-                                                </svg>
-                                                Lab Required
+                                        {/* UPDATED: Dynamic Lab Badge */}
+                                        {s.labPeriods > 0 && (
+                                            <span className="lab-badge" title={`${s.labPeriods} out of ${s.totalWeeklyPeriod} periods require a lab`}>
+                                                {s.labPeriods} Lab Period(s)
                                             </span>
                                         )}
                                     </div>
@@ -623,7 +624,7 @@ function SubjectManager({ showError }) {
                                 </td>
                             </tr>
                         )})
-                    )}
+                )}
                 </tbody>
             </table>
 
@@ -633,7 +634,7 @@ function SubjectManager({ showError }) {
                     <div className="enterprise-modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3>{editingId ? 'Edit Curriculum Subject' : 'Add New Subject'}</h3>
-                            <button className="close-btn" onClick={() => setIsModalOpen(false)}>✖</button>
+                            <button className="close-btn" onClick={() => setIsModalOpen(false)}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div className="form-grid">
@@ -655,17 +656,46 @@ function SubjectManager({ showError }) {
                                 </div>
                                 <div className="form-group">
                                     <label>Weekly Periods</label>
-                                    <input type="number" value={editForm.totalWeeklyPeriod} onChange={e => setEditForm({...editForm, totalWeeklyPeriod: e.target.value})} min="1" />
+                                    <input type="number" value={editForm.totalWeeklyPeriod} onChange={e => {
+                                        const newTotal = parseInt(e.target.value) || 0;
+                                        setEditForm({
+                                            ...editForm,
+                                            totalWeeklyPeriod: newTotal,
+                                            // Enterprise safeguard: Don't let lab periods exceed the new total
+                                            labPeriods: Math.min(editForm.labPeriods, newTotal)
+                                        });
+                                    }} min="1" />
                                 </div>
-                                <div className="form-group full-width checkbox-group">
-                                    <label className="checkbox-label">
-                                        <input type="checkbox" checked={editForm.isLabSubject} onChange={e => setEditForm({...editForm, isLabSubject: e.target.checked})} />
-                                        <div className="checkbox-text">
-                                            <strong>Requires Laboratory Facility</strong>
-                                            <span>Check this if the subject must be scheduled in a Lab room</span>
+
+                                {/* ENTERPRISE LAB REQUIREMENT BLOCK */}
+                                <div className="form-group full-width">
+                                    <label>Laboratory Requirements</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <strong style={{ display: 'block', fontSize: '14px', color: '#111827', marginBottom: '4px' }}>Dedicated Lab Periods</strong>
+                                            <span style={{ fontSize: '12px', color: '#6B7280' }}>How many of the {editForm.totalWeeklyPeriod || 0} weekly periods require a Lab room?</span>
                                         </div>
-                                    </label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <input
+                                                type="number"
+                                                value={editForm.labPeriods}
+                                                onChange={e => {
+                                                    let val = parseInt(e.target.value) || 0;
+                                                    // Clamp values between 0 and totalWeeklyPeriod
+                                                    if (val < 0) val = 0;
+                                                    if (val > editForm.totalWeeklyPeriod) val = editForm.totalWeeklyPeriod;
+                                                    setEditForm({...editForm, labPeriods: val});
+                                                }}
+                                                min="0"
+                                                max={editForm.totalWeeklyPeriod}
+                                                style={{ width: '70px', textAlign: 'center', fontWeight: 'bold' }}
+                                                className="enterprise-input"
+                                            />
+                                            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: '600' }}>/ {editForm.totalWeeklyPeriod || 0}</span>
+                                        </div>
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
                         <div className="modal-footer">
@@ -676,12 +706,12 @@ function SubjectManager({ showError }) {
                 </div>
             )}
 
-            <ConfirmDeleteModal 
-                isOpen={deleteModalOpen} 
-                onClose={() => setDeleteModalOpen(false)} 
-                onConfirm={confirmDelete} 
-                title="Delete Subject" 
-                message="Are you sure you want to delete this subject?" 
+            <ConfirmDeleteModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Subject"
+                message="Are you sure you want to delete this subject?"
             />
         </div>
     );
