@@ -6,6 +6,7 @@ public record TimeslotFact(
         String id, // e.g., "MONDAY-1" (Combines Day and Period ID)
         DayOfWeek dayOfWeek,
         Long classPeriodId,
-        int periodIndex
+        int periodIndex,
+        boolean isMorning
 ) {
 }

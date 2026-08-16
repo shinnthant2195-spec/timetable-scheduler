@@ -29,20 +29,20 @@ public class Subject {
     @Column(name = "subject_type", nullable = false)
     private  SubjectType subjectType;
 
-    @Column(name = "is_lab_sub", nullable = false)
-    private Boolean isLabSubject;
+    @Column(name = "lab_periods", nullable = false)
+    private Integer labPeriods = 0;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeacherSubject> teacherSubjects = new ArrayList<>();
 
     public Subject() {}
 
-    public Subject(String subjectCode, String name, Integer totalWeeklyPeriod, SubjectType subjectType, Boolean isLabSubject) {
+    public Subject(String subjectCode, String name, Integer totalWeeklyPeriod, SubjectType subjectType, Integer labPeriods) {
         this.subjectCode = subjectCode;
         this.name = name;
         this.totalWeeklyPeriod = totalWeeklyPeriod;
         this.subjectType = subjectType;
-        this.isLabSubject = isLabSubject;
+        this.labPeriods = labPeriods;
     }
 
     public Integer getId() {
@@ -85,12 +85,12 @@ public class Subject {
         this.subjectType = subjectType;
     }
 
-    public Boolean getLabSubject() {
-        return isLabSubject;
+    public Integer getLabPeriods() {
+        return labPeriods;
     }
 
-    public void setLabSubject(Boolean labSubject) {
-        isLabSubject = labSubject;
+    public void setLabPeriods(Integer labPeriods) {
+        this.labPeriods = labPeriods;
     }
 
     public List<TeacherSubject> getTeacherSubjects() {

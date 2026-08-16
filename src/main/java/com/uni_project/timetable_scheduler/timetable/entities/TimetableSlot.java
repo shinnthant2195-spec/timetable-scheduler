@@ -44,6 +44,8 @@ public class TimetableSlot {
     @JoinColumn(name = "teacher_id", nullable = false)
     private Teacher teacher;
 
+    private Boolean requiresLab = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TimetableStatus status = TimetableStatus.DRAFT;
@@ -72,15 +74,15 @@ public class TimetableSlot {
     public Teacher getTeacher() {
         return teacher;
     }
+    public Boolean getRequiresLab() {return requiresLab; }
+    public TimetableStatus getStatus() {return status; }
 
-    public TimetableStatus getStatus() {
-        return status;
-    }
     public void setDayOfWeek(DayOfWeek dayOfWeek) { this.dayOfWeek = dayOfWeek; }
     public void setClassPeriod(ClassPeriod classPeriod) { this.classPeriod = classPeriod; }
     public void setRoom(Room room) { this.room = room; }
     public void setSession(Session session) { this.session = session; }
     public void setSubject(Subject subject) { this.subject = subject; }
     public void setTeacher(Teacher teacher) { this.teacher = teacher; }
+    public void setRequiresLab(Boolean requiresLab) { this.requiresLab = requiresLab; }
     public void setStatus(TimetableStatus status) { this.status = status; }
 }

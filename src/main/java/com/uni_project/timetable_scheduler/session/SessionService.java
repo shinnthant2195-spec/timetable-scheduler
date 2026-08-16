@@ -41,7 +41,8 @@ public class SessionService {
                 s -> new SubjectLabelDTO(
                         s.getId(),
                         s.getName(),
-                        s.getSubjectCode()
+                        s.getSubjectCode(),
+                        s.getLabPeriods()
                 )).toList();
 
         return new SessionResponseDTO(

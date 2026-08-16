@@ -13,6 +13,7 @@ public record TimetableSlotResponseDTO(
         String subjectCode,
         String subjectName,
         Subject.SubjectType subjectType,
+        Boolean requiresLab,
         String teacherId,
         String teacherName,
         Integer roomId,

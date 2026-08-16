@@ -1,6 +1,7 @@
 package com.uni_project.timetable_scheduler.timetable.service;
 
 import com.uni_project.timetable_scheduler.class_period.ClassPeriod;
+import com.uni_project.timetable_scheduler.class_period.ClassPeriodRepository;
 import com.uni_project.timetable_scheduler.room.Room;
 import com.uni_project.timetable_scheduler.session.Session;
 import com.uni_project.timetable_scheduler.subject.Subject;
@@ -11,6 +12,7 @@ import com.uni_project.timetable_scheduler.timetable.repos.TimetableSlotReposito
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,25 +21,39 @@ public class TimetableValidationService {
 
     private final TimetableSlotRepository slotRepo;
     private final TeacherAvailabilityRepository availabilityRepo;
+    private final ClassPeriodRepository periodRepo;
 
-    public TimetableValidationService(TimetableSlotRepository slotRepo, TeacherAvailabilityRepository availabilityRepo) {
+    public TimetableValidationService(TimetableSlotRepository slotRepo, TeacherAvailabilityRepository availabilityRepo,  ClassPeriodRepository periodRepo) {
         this.slotRepo = slotRepo;
         this.availabilityRepo = availabilityRepo;
+        this.periodRepo = periodRepo;
     }
 
     // 1. Added excludeSlotIds parameter
-    public void validateManualPlacement(Teacher teacher, Session session, Room room, Subject subject, DayOfWeek day, ClassPeriod period, Collection<Long> excludeSlotIds) {
+    public void validateManualPlacement(Teacher teacher, Session session, Room room, Subject subject, boolean requiresLab, DayOfWeek day, ClassPeriod period, Collection<Long> excludeSlotIds) {
 
         // Safety fallback for empty NOT IN clauses
         Collection<Long> excludes = (excludeSlotIds == null || excludeSlotIds.isEmpty()) ? List.of(-1L) : excludeSlotIds;
+
+        // Check WEDNESDAY Afternoons Slots For Extra Curricular
+        if (day == DayOfWeek.WEDNESDAY) {
+            LocalTime lunchEndTime = periodRepo.findAll().stream()
+                    .filter(p -> p.getType() == ClassPeriod.PeriodType.LUNCH)
+                    .map(ClassPeriod::getEndTime)
+                    .findFirst()
+                    .orElse(LocalTime.of(12, 0));
+
+            if (!period.getStartTime().isBefore(lunchEndTime)) {
+                throw new IllegalArgumentException("Wednesday afternoon is reserved for Extra Curricular Activities. No classes allowed.");
+            }
+        }
 
         if (session.getTotalStudent() > room.getCapacity()) {
             throw new IllegalArgumentException("Room capacity is too small for this session.");
         }
 
-        // if dynamic weight for lab assigned is implemented, this need to be fixed
-        if (Boolean.TRUE.equals(subject.getLabSubject()) && room.getRoomType() != Room.RoomType.LAB) {
-            throw new IllegalArgumentException("Lab subjects must be in a LAB room.");
+        if (requiresLab && room.getRoomType() != Room.RoomType.LAB) {
+            throw new IllegalArgumentException("This specific block requires a LAB room.");
         }
 
         if (teacher.getTeacherType() == Teacher.TeacherType.PART_TIME) {

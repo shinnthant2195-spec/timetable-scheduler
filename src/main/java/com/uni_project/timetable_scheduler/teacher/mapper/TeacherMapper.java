@@ -36,7 +36,8 @@ public interface TeacherMapper {
                 .map(s -> new SubjectLabelDTO(
                         s.getId(),
                         s.getName(),
-                        s.getSubjectCode()
+                        s.getSubjectCode(),
+                        s.getLabPeriods()
                 )).toList();
     }
 

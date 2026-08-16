@@ -4,7 +4,7 @@ import com.uni_project.timetable_scheduler.subject.Subject;
 
 public record SubjectFact(
         Integer id,
-        Boolean isLabSubject,
+        Integer labPeriods,
         Subject.SubjectType subjectType
 ) {
 }

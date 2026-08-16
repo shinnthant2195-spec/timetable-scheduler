@@ -13,7 +13,7 @@ import java.util.List;
 public interface SubjectRepository extends JpaRepository<Subject, Integer> {
 
     @Query("SELECT new com.uni_project.timetable_scheduler.subject.dto.SubjectLabelDTO(" +
-            "s.id, s.name, s.subjectCode)" +
+            "s.id, s.name, s.subjectCode, s.labPeriods)" + // <-- ADD s.labPeriods
             "FROM Subject s")
     List<SubjectLabelDTO> findAllSubjectLabel();
 

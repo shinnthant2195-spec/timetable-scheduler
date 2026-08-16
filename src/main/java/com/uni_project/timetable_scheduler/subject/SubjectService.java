@@ -44,7 +44,7 @@ public class SubjectService {
                 s.getSubjectCode(),
                 s.getName(),
                 s.getSubjectType().name(),
-                s.getLabSubject(),
+                s.getLabPeriods(),
                 s.getTotalWeeklyPeriod()
         ));
     }

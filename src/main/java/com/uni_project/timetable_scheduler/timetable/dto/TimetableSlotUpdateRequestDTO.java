@@ -7,5 +7,6 @@ public record TimetableSlotUpdateRequestDTO(
         Integer roomId,
         Integer sessionId,
         Integer subjectId,
-        String teacherId
+        String teacherId,
+        Boolean requiresLab
 ) {}

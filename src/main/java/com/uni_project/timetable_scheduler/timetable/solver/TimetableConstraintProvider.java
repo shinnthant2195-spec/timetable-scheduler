@@ -53,7 +53,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
 
     private Constraint labRoomRequired(ConstraintFactory factory) {
         return factory.forEach(TimeSlot.class)
-                .filter(slot -> Boolean.TRUE.equals(slot.getSubject().isLabSubject()) &&
+                .filter(slot -> Boolean.TRUE.equals(slot.getRequiresLab()) &&
                         slot.getRoom().roomType() != Room.RoomType.LAB)
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("Lab Subject Require Lab Room");
@@ -103,7 +103,8 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     private Constraint consecutiveSubjectBlocks(ConstraintFactory factory) {
         return factory.forEachUniquePair(TimeSlot.class,
                 Joiners.equal(TimeSlot::getSubject),
-                Joiners.equal(slot -> slot.getTimeslot().dayOfWeek()))
+                Joiners.equal(slot -> slot.getTimeslot().dayOfWeek()),
+                        Joiners.equal(slot -> slot.getTimeslot().isMorning()))
                 .filter((slot1, slot2) -> Math.abs(slot1.getTimeslot().periodIndex() - slot2.getTimeslot().periodIndex()) == 1)
                 .reward(HardSoftScore.ONE_SOFT)
                 .asConstraint("Reward consecutive periods for the same subject");
