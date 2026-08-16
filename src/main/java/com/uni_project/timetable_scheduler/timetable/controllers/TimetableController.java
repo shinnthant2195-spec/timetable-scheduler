@@ -5,6 +5,7 @@ import com.uni_project.timetable_scheduler.timetable.dto.TimetableSlotResponseDT
 import com.uni_project.timetable_scheduler.timetable.dto.TimetableSlotSwapRequestDTO;
 import com.uni_project.timetable_scheduler.timetable.dto.TimetableSlotUpdateRequestDTO;
 import com.uni_project.timetable_scheduler.timetable.repos.TimetableSlotRepository;
+import com.uni_project.timetable_scheduler.timetable.service.PdfExportService;
 import com.uni_project.timetable_scheduler.timetable.service.TimefoldSolverService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +20,12 @@ public class TimetableController {
 
     private final TimefoldSolverService solverService;
     private final TimetableSlotRepository  slotRepo;
+    private final PdfExportService  pdfExportService;
 
-    public TimetableController(TimefoldSolverService solverService,  TimetableSlotRepository timetableSlotRepo) {
+    public TimetableController(TimefoldSolverService solverService,  TimetableSlotRepository timetableSlotRepo,  PdfExportService pdfExportService) {
         this.solverService = solverService;
         this.slotRepo = timetableSlotRepo;
+        this.pdfExportService = pdfExportService;
     }
 
     @PostMapping("/generate/all")
@@ -102,5 +105,31 @@ public class TimetableController {
     public ResponseEntity<Map<String, String>> clearPublishedBySession(@PathVariable Integer sessionId) {
         solverService.wipePublishedBySession(sessionId);
         return ResponseEntity.ok(Map.of("message", "Published timetable wiped for session."));
+    }
+
+    @GetMapping(value = "/session/{sessionId}/export/pdf", produces = org.springframework.http.MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> exportSessionPdf(@PathVariable Integer sessionId) {
+        try {
+            byte[] pdfBytes = pdfExportService.generateTimetablePdf(sessionId);
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=Timetable_" + sessionId + ".pdf")
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping(value = "/export/zip", produces = "application/zip")
+    public ResponseEntity<byte[]> exportAllTimetablesZip() {
+        try {
+            byte[] zipBytes = pdfExportService.generateAllTimetablesZip();
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=All_Timetables.zip")
+                    .body(zipBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
