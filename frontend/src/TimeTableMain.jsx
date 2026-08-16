@@ -21,8 +21,8 @@ const CustomDropdown = ({ options, value, onChange, placeholder, className = '' 
 
   return (
     <div className={`custom-select-container ${className}`} ref={dropdownRef}>
-      <div 
-        className={`custom-select-trigger ${isOpen ? 'open' : ''}`} 
+      <div
+        className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className={!selectedOption ? 'placeholder-text' : ''}>
@@ -32,7 +32,7 @@ const CustomDropdown = ({ options, value, onChange, placeholder, className = '' 
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       </div>
-      
+
       {isOpen && (
         <div className="custom-select-dropdown">
           {options.length === 0 ? (
@@ -67,7 +67,7 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, placeholder, c
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
-        setSearchQuery(''); 
+        setSearchQuery('');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -82,14 +82,14 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, placeholder, c
     }
   };
 
-  const filteredOptions = options.filter(option => 
+  const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className={`custom-select-container ${className}`} ref={dropdownRef}>
-      <div 
-        className={`custom-select-trigger ${isOpen ? 'open' : ''}`} 
+      <div
+        className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className={selectedValues.length === 0 ? 'placeholder-text' : ''}>
@@ -99,11 +99,11 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, placeholder, c
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       </div>
-      
+
       {isOpen && (
         <div className="custom-select-dropdown" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '8px', borderBottom: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', position: 'sticky', top: 0, zIndex: 2 }}>
-            <input 
+            <input
               type="text"
               className="enterprise-input"
               placeholder="Search teacher..."
@@ -119,8 +119,8 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, placeholder, c
             ) : (
               filteredOptions.map((option) => (
                 <label key={option.value} className="multi-select-option">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="multi-select-checkbox"
                     checked={selectedValues.includes(option.value)}
                     onChange={() => toggleValue(option.value)}
@@ -145,18 +145,18 @@ export default function Timetable() {
   const [teachers, setTeachers] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  
+
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [excludedTeacherIds, setExcludedTeacherIds] = useState([]);
   const [classPeriods, setClassPeriods] = useState([]);
   const [timetableSlots, setTimetableSlots] = useState([]);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
-  
+
   const [notification, setNotification] = useState({ visible: false, message: '', type: '' });
   const [generationError, setGenerationError] = useState(null);
-  
+
   const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [periodForm, setPeriodForm] = useState({ name: '', startTime: '', endTime: '', type: 'LECTURE' });
@@ -169,6 +169,10 @@ export default function Timetable() {
   const [dangerMenuOpen, setDangerMenuOpen] = useState(false);
   const dangerMenuRef = useRef(null);
   const [confirmAction, setConfirmAction] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+
+  // PDF and ZIP Export States
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef(null);
 
   // Intelligent Subject Coloring
   const subjectColors = [
@@ -206,16 +210,64 @@ export default function Timetable() {
     else setTimetableSlots([]);
   }, [selectedSessionId]);
 
-  // Close danger menu on outside click
+    // --- EXPORT HANDLERS ---
+    const handleExportSinglePdf = async () => {
+        if (!selectedSessionId) return;
+        setIsLoading(true);
+        setExportMenuOpen(false); // Close the menu
+        try {
+            const response = await fetch(`http://localhost:8082/api/timetable/session/${selectedSessionId}/export/pdf`);
+            if (!response.ok) throw new Error("Failed to generate PDF");
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Timetable_${selectedSessionId}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+        } catch (error) {
+            showNotification('Error downloading PDF', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleExportAllZip = async () => {
+        setIsLoading(true);
+        setExportMenuOpen(false); // Close the menu
+        try {
+            const response = await fetch(`http://localhost:8082/api/timetable/export/zip`);
+            if (!response.ok) throw new Error("Failed to generate ZIP");
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `All_Timetables.zip`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+        } catch (error) {
+            showNotification('Error downloading ZIP', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
   useEffect(() => {
       const handleClickOutside = (event) => {
           if (dangerMenuRef.current && !dangerMenuRef.current.contains(event.target)) {
               setDangerMenuOpen(false);
           }
+          if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+              setExportMenuOpen(false);
+          }
       };
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+      }, []);
 
   const fetchLookups = async () => {
     try {
@@ -289,9 +341,9 @@ export default function Timetable() {
     try {
         const res = await fetch('http://localhost:8082/api/timetable/status');
         const data = await res.json();
-        
+
         if (data.status === 'SOLVING_ACTIVE' || data.status === 'SOLVING_SCHEDULED') {
-            setTimeout(pollSolverStatus, 1000); 
+            setTimeout(pollSolverStatus, 1000);
         } else {
             setIsLoading(false);
             setIsSolving(false);
@@ -308,18 +360,18 @@ export default function Timetable() {
   const handleGenerate = async () => {
     const confirmRegen = window.confirm("⚠️ AI SOLVER: You are about to run the Timefold Global Solver.\n\nThis will look at ALL sessions and teachers and generate a master schedule. Continue?");
     if (!confirmRegen) return;
-    
+
     setIsLoading(true);
     setIsSolving(true);
     setGenerationError(null);
-    
+
     try {
-        const res = await fetch(`http://localhost:8082/api/timetable/generate/all`, { 
+        const res = await fetch(`http://localhost:8082/api/timetable/generate/all`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ excludedTeacherIds: excludedTeacherIds })
         });
-        
+
         if (!res.ok) {
             let errMsg = "The AI failed to initialize.";
             try {
@@ -328,11 +380,11 @@ export default function Timetable() {
             } catch(e) {}
             throw new Error(errMsg);
         }
-        
+
         setTimeout(pollSolverStatus, 1000);
-        
+
     } catch (error) {
-        setGenerationError(error.message); 
+        setGenerationError(error.message);
         setIsLoading(false);
         setIsSolving(false);
     }
@@ -340,14 +392,14 @@ export default function Timetable() {
 
   const handlePublish = async () => {
     if (!window.confirm("Publish this schedule? This will finalize the draft and make it visible to students.")) return;
-    
+
     setIsLoading(true);
     try {
         await apiFetch(`http://localhost:8082/api/timetable/session/${selectedSessionId}/publish`, { method: 'POST' });
         showNotification('Schedule published successfully!');
-        fetchTimetable(selectedSessionId); 
-    } catch (error) { 
-        setGenerationError(error.message); 
+        fetchTimetable(selectedSessionId);
+    } catch (error) {
+        setGenerationError(error.message);
     } finally {
         setIsLoading(false);
     }
@@ -531,7 +583,7 @@ export default function Timetable() {
         const reqStartTime = periodForm.startTime.length === 5 ? periodForm.startTime + ":00" : periodForm.startTime;
         const reqEndTime = periodForm.endTime.length === 5 ? periodForm.endTime + ":00" : periodForm.endTime;
         const payload = { ...periodForm, startTime: reqStartTime, endTime: reqEndTime };
-        
+
         await apiFetch('http://localhost:8082/api/period', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
@@ -565,7 +617,7 @@ export default function Timetable() {
 
   const sessionOptions = sessions.map(s => ({
     value: s.id,
-    label: `${s.name} (${s.majorName || 'Unassigned'})` 
+    label: `${s.name} (${s.majorName || 'Unassigned'})`
   }));
 
   const teacherOptions = teachers.map(t => ({
@@ -693,7 +745,7 @@ export default function Timetable() {
                             <label>Room</label>
                             <CustomDropdown options={roomOptions} value={slotForm.roomId} onChange={val => setSlotForm({...slotForm, roomId: val})} placeholder="Select Room" />
                         </div>
-                        
+
                         <div style={{ display: 'flex', gap: '12px' }}>
                             <button type="submit" className="submit-btn" style={{flex: 1}}>
                                 {slotModal.mode === 'ADD' ? 'Save Assignment' : 'Update Assignment'}
@@ -716,11 +768,15 @@ export default function Timetable() {
           <p>Configure Timetable Structure and generate for all sessions</p>
         </div>
         <div className="header-right" style={{ display: 'flex', gap: '12px' }}>
-                     
-          <button className="action-btn generate-btn" onClick={handleGenerate} disabled={isLoading}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            {isLoading ? 'Running Timefold AI...' : 'Generate Schedule'}
-          </button>
+
+            <button
+                className="action-btn generate-btn"
+                onClick={handleGenerate}
+                disabled={isSolving} // <-- Remove isLoading from here so PDF export doesn't disable it
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                {isSolving ? 'Running Timefold AI...' : 'Generate Schedule'}
+            </button>
           <button className="secondary-btn icon-btn" onClick={() => setShowPeriodModal(true)}>
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
              Configure Schedule
@@ -739,10 +795,10 @@ export default function Timetable() {
                 </span>
               )}
             </label>
-            <CustomDropdown 
-               options={sessionOptions} 
-               value={selectedSessionId} 
-               onChange={(val) => setSelectedSessionId(val)} 
+            <CustomDropdown
+               options={sessionOptions}
+               value={selectedSessionId}
+               onChange={(val) => setSelectedSessionId(val)}
                placeholder="Select a Session"
               className="session-dropdown"
             />
@@ -750,10 +806,10 @@ export default function Timetable() {
 
           <div className="selector-group" style={{ flex: 1 }}>
             <label>Exclude Teachers (Leave/Research)</label>
-            <MultiSelectDropdown 
-               options={teacherOptions} 
-               selectedValues={excludedTeacherIds} 
-               onChange={(vals) => setExcludedTeacherIds(vals)} 
+            <MultiSelectDropdown
+               options={teacherOptions}
+               selectedValues={excludedTeacherIds}
+               onChange={(vals) => setExcludedTeacherIds(vals)}
                placeholder="Select Teachers to Skip"
               className="session-dropdown"
             />
@@ -765,12 +821,37 @@ export default function Timetable() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             Publish Session
           </button>
-          
+
+            {/* --- NEW EXPORT MENU --- */}
+            <div style={{ position: 'relative' }} ref={exportMenuRef}>
+                <button
+                    className="secondary-btn icon-btn"
+                    onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                    style={{ height: '100%' }} // Matches the height of adjacent buttons
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export
+                </button>
+
+                {exportMenuOpen && (
+                    <div className="action-menu">
+                        <div className="action-menu-item" onClick={handleExportSinglePdf} style={{ opacity: (!selectedSessionId || timetableSlots.length === 0) ? 0.5 : 1, pointerEvents: (!selectedSessionId || timetableSlots.length === 0) ? 'none' : 'auto' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            Current Session (PDF)
+                        </div>
+                        <div className="action-menu-item" onClick={handleExportAllZip}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            All Sessions (ZIP)
+                        </div>
+                    </div>
+                )}
+            </div>
+
           <div style={{ position: 'relative' }} ref={dangerMenuRef}>
               <button className="action-btn nuclear-btn" onClick={() => setDangerMenuOpen(!dangerMenuOpen)}>
                 Actions
               </button>
-              
+
               {dangerMenuOpen && (
                   <div className="danger-menu">
                       <div className="danger-menu-section">Current Session</div>
@@ -780,7 +861,7 @@ export default function Timetable() {
                       <div className="danger-item" onClick={() => openConfirmModal('Wipe Session Published', 'Delete the PUBLISHED schedule for this specific session?', `session/${selectedSessionId}/published`, 'Session published wiped.')}>
                           Wipe Session Published
                       </div>
-                      
+
                       <div className="danger-menu-section">Global Actions</div>
                       <div className="danger-item" onClick={() => openConfirmModal('Wipe All Drafts', 'Delete ALL draft schedules across the entire university?', 'drafts/all', 'All global drafts wiped.')}>
                           Wipe All Global Drafts
@@ -815,7 +896,7 @@ export default function Timetable() {
                         <div className="period-time">{period.startTime.substring(0,5)} - {period.endTime.substring(0,5)}</div>
                     </div>
                   </td>
-                  
+
                   {/* PERFECTLY CENTERED BREAK/LUNCH BANNERS */}
                   {period.type !== 'LECTURE' ? (
                      <td colSpan="5" className="drop-zone non-instructional">
@@ -829,8 +910,8 @@ export default function Timetable() {
                     daysOfWeek.map(day => {
                     const slotsInCell = getSlotsForCell(day, period.id);
                     return (
-                        <td 
-                           key={`${day}-${period.id}`} 
+                        <td
+                           key={`${day}-${period.id}`}
                            className="drop-zone"
                           onDragOver={onDragOver}
                           onDrop={(e) => onDrop(e, day, period)}
@@ -842,14 +923,14 @@ export default function Timetable() {
                               {slotsInCell.map(slot => {
                                 const sStyle = getSubjectStyle(slot.subjectName);
                                 return (
-                                  <div 
+                                  <div
                                     key={slot.id}
                                     className="slot-card"
                                     draggable
                                     onDragStart={(e) => onDragStart(e, slot)}
                                     onClick={(e) => { e.stopPropagation(); openEditSlotModal(slot); }}
                                     title={`Click to Edit | Drag to Move\n${slot.subjectName} - ${slot.teacherName}`}
-                                    style={{ 
+                                    style={{
                                        flex: 1, minHeight: 0,
                                        backgroundColor: sStyle.bg,
                                        borderLeftColor: sStyle.border,
@@ -911,7 +992,7 @@ export default function Timetable() {
               </div>
             )}
         </div>
-        
+
       ) : (
         <div className="empty-state">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
@@ -927,7 +1008,7 @@ export default function Timetable() {
               <h3>Schedule Configuration</h3>
               <button className="tm-modal-close-btn" onClick={() => setShowPeriodModal(false)} title="Close">✕</button>
             </div>
-            
+
             <div className="modal-body">
                <form onSubmit={handleSavePeriod} className="period-form">
                    <h4>Add New Block</h4>
@@ -947,10 +1028,10 @@ export default function Timetable() {
                    </div>
                    <div className="form-group">
                        <label>Block Type</label>
-                       <CustomDropdown 
-                          options={blockTypeOptions} 
-                          value={periodForm.type} 
-                          onChange={(val) => setPeriodForm(prev => ({ ...prev, type: val }))} 
+                       <CustomDropdown
+                          options={blockTypeOptions}
+                          value={periodForm.type}
+                          onChange={(val) => setPeriodForm(prev => ({ ...prev, type: val }))}
                           placeholder="Select Block Type"
                        />
                    </div>

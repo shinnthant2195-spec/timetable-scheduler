@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>University Timetable</title>
+  <style>
+    /* PDF Page Setup for Formal Black and White Printing */
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+      @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 9pt;
+        color: #000000;
+      }
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #000000;
+      font-size: 10px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #000000;
+      padding-bottom: 10px;
+    }
+    .header h1 { margin: 0; color: #000000; font-size: 24px; font-weight: bold; text-transform: uppercase; }
+    .header h3 { margin: 6px 0 0 0; color: #333333; font-size: 14px; font-weight: normal; }
+
+    /* Formal Grid Layout */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #000000;
+    }
+    th {
+      background-color: #E0E0E0;
+      padding: 10px 4px;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #000000;
+      text-align: center; /* Enforces center alignment for all X-Axis headers */
+    }
+    td {
+      padding: 4px;
+      vertical-align: middle;
+      text-align: center;
+      height: 60px;
+    }
+
+    .day-col {
+      width: 75px;
+      background-color: #E0E0E0;
+      text-align: center;
+      vertical-align: middle;
+      font-weight: bold;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    /* Prevents time strings like "11:50 - 13:00" from wrapping awkwardly */
+    .period-time {
+      font-size: 10px;
+      color: #000000;
+      font-weight: bold;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* Vertical Break Columns (Lunch/Recess) */
+    .break-col {
+      background-color: #F5F5F5;
+      text-align: center;
+      vertical-align: middle;
+      font-weight: bold;
+      font-size: 12px;
+      color: #000000;
+      text-transform: uppercase;
+      width: 70px; /* Increased from 25px to cleanly fit the time string */
+    }
+
+    /* Forces exactly one letter per line cleanly */
+    .break-letter {
+      display: block;
+      line-height: 1.2;
+    }
+
+    /* Wednesday Afternoon Extra Curricular - Black and White Friendly */
+    .extra-curricular {
+      background-color: #E0E0E0;
+      text-align: center;
+      vertical-align: middle;
+      color: #000000;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    /* Slot Container */
+    .slot-container {
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+    }
+    /* Adds a tiny dashed separator only if there are concurrent electives in the same block */
+    .slot-container:not(:last-child) {
+      border-bottom: 1px dashed #999999;
+    }
+
+    .slot-subject { font-size: 11px; font-weight: bold; color: #000000; display: block; }
+    .slot-room { font-size: 10px; color: #333333; display: block; margin-top: 2px; }
+
+    /* Legend Layout */
+    .legend-container {
+      border: 1px solid #000000;
+      padding: 12px;
+      background-color: #FFFFFF;
+      page-break-inside: avoid;
+    }
+    .legend-container h4 {
+      margin: 0 0 10px 0;
+      font-size: 12px;
+      color: #000000;
+      text-transform: uppercase;
+      border-bottom: 1px solid #000000;
+      padding-bottom: 4px;
+    }
+    .legend-grid {
+      width: 100%;
+    }
+    .legend-item {
+      float: left;
+      width: 33%;
+      margin-bottom: 8px;
+      font-size: 10px;
+      color: #000000;
+    }
+    .legend-code {
+      font-weight: bold;
+      color: #000000;
+      margin-right: 6px;
+    }
+    .clearfix { clear: both; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Official Timetable Schedule</h1>
+  <h3>Session: <strong th:text="${sessionName}">Session Name</strong> &#160;|&#160; Major: <span th:text="${majorName}">Major</span></h3>
+</div>
+
+<table>
+  <thead>
+  <tr>
+    <th class="day-col">Day</th>
+    <!-- X-Axis: Periods (Time Only, Centered) -->
+    <th th:each="p : ${periods}" th:class="${p.type != 'LECTURE'} ? 'break-col' : ''">
+      <div class="period-time" th:text="${p.timeRange}">09:00 - 10:00</div>
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <!-- Y-Axis: Days -->
+  <tr th:each="day : ${days}">
+    <td class="day-col" th:text="${day}">MONDAY</td>
+
+    <th:block th:each="p : ${periods}">
+
+      <!-- LUNCH / RECESS LOGIC (Vertical Span) -->
+      <th:block th:if="${p.type != 'LECTURE'}">
+        <!-- Only render the TD on Monday, it spans down for the rest of the week -->
+        <td th:if="${day == 'MONDAY'}" rowspan="5" class="break-col">
+          <!-- Safe Thymeleaf loop accessing the pre-calculated list of characters -->
+          <span class="break-letter" th:each="char : ${p.verticalName}" th:text="${char}">L</span>
+        </td>
+      </th:block>
+
+      <!-- LECTURE LOGIC -->
+      <th:block th:if="${p.type == 'LECTURE'}">
+
+        <!-- Extra Curricular Logic -->
+        <th:block th:if="${day == 'WEDNESDAY' and p.timeRange.substring(0,5).compareTo(lunchEndTime.toString()) >= 0}">
+          <td th:if="${p.id == firstAfternoonPeriodId}" th:colspan="${afternoonLectureCount}" class="extra-curricular">
+            EXTRA CURRICULAR ACTIVITIES
+          </td>
+        </th:block>
+
+        <!-- Standard Lecture Block -->
+        <th:block th:unless="${day == 'WEDNESDAY' and p.timeRange.substring(0,5).compareTo(lunchEndTime.toString()) >= 0}">
+          <td>
+            <div class="slot-container" th:each="slot : ${slots}" th:if="${slot.dayOfWeek().name() == day and slot.classPeriodId() == p.id}">
+              <span class="slot-subject" th:text="${slot.subjectCode()}">CS-101</span>
+              <span class="slot-room" th:text="${slot.roomName()}">Room A</span>
+            </div>
+          </td>
+        </th:block>
+
+      </th:block>
+    </th:block>
+  </tr>
+  </tbody>
+</table>
+
+<!-- LEGEND / REFERENCE -->
+<div class="legend-container">
+  <h4>Subject &amp; Teacher Reference</h4>
+  <div class="legend-grid">
+    <div class="legend-item" th:each="item : ${legend}">
+      <span class="legend-code" th:text="${item.code()}">CS-101</span>
+      <span th:text="${item.name() + ' - ' + item.teacher()}">Subject Name - Teacher</span>
+    </div>
+    <div class="clearfix"></div>
+  </div>
+</div>
+
+</body>
+</html>
