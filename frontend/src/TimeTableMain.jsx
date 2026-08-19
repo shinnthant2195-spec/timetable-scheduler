@@ -136,7 +136,6 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, placeholder, c
   );
 };
 
-
 // ==========================================
 // MAIN TIMETABLE COMPONENT
 // ==========================================
@@ -160,6 +159,20 @@ export default function Timetable() {
   const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [periodForm, setPeriodForm] = useState({ name: '', startTime: '', endTime: '', type: 'LECTURE' });
+
+    const dockedSlotsRaw = timetableSlots.filter(s => !s.dayOfWeek || !s.classPeriodId);
+    const gridSlots = timetableSlots.filter(s => s.dayOfWeek && s.classPeriodId);
+
+    // 2. Group docked slots so a shared lecture only shows as ONE card in the dock
+    const dockedBlocks = [];
+    const dockedMap = new Set();
+    dockedSlotsRaw.forEach(s => {
+        const key = `${s.subjectId}-${s.teacherId}`;
+        if (!dockedMap.has(key)) {
+            dockedMap.add(key);
+            dockedBlocks.push(s);
+        }
+    });
 
   // Manual Slot Modal States
   const [slotModal, setSlotModal] = useState({ isOpen: false, mode: 'ADD', slotId: null, dayOfWeek: '', classPeriodId: '' });
@@ -253,6 +266,41 @@ export default function Timetable() {
             showNotification('Error downloading ZIP', 'error');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handlePrintPdf = async () => {
+        if (!selectedSessionId) return;
+
+        setIsLoading(true); // ✅ FIX: Use the existing isLoading state
+        setExportMenuOpen(false);
+
+        try {
+            const response = await fetch(`http://localhost:8082/api/timetable/session/${selectedSessionId}/export/pdf`);
+            if (!response.ok) throw new Error("Failed to fetch PDF for printing");
+
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+
+            // ENTERPRISE FIX: Bypass the hidden iframe sandbox by opening the PDF natively.
+            // This hands the PDF securely to the browser's built-in reader.
+            const printWindow = window.open(blobUrl, '_blank');
+
+            // Fallback just in case the user has an aggressive pop-up blocker enabled
+            if (!printWindow) {
+                showNotification("Pop-up blocked! Please allow pop-ups to view the print format.", "error");
+            }
+
+            // Clean up memory after a minute
+            setTimeout(() => {
+                window.URL.revokeObjectURL(blobUrl);
+            }, 60000);
+
+        } catch (error) {
+            console.error("Print Error:", error);
+            showNotification('Error preparing timetable for print', 'error');
+        } finally {
+            setIsLoading(false); // ✅ FIX: Ensure you turn off the loading state here
         }
     };
 
@@ -452,11 +500,30 @@ export default function Timetable() {
         e.preventDefault();
         const sourceSlotIdStr = e.dataTransfer.getData('sourceSlotId');
         if (!sourceSlotIdStr) return;
+
         const sourceSlotId = parseInt(sourceSlotIdStr, 10);
         const sourceSlot = timetableSlots.find(s => s.id === sourceSlotId);
         if (!sourceSlot) return;
 
         if (sourceSlot.dayOfWeek === targetDay && sourceSlot.classPeriodId === targetPeriod.id) return;
+
+        // 🚨 NEW LOGIC: If pulling from the Dock, we MUST get a room first!
+        if (!sourceSlot.roomId || !sourceSlot.dayOfWeek) {
+            setSlotModal({
+                isOpen: true,
+                mode: 'EDIT',
+                slotId: sourceSlot.id,
+                dayOfWeek: targetDay,
+                classPeriodId: targetPeriod.id
+            });
+            setSlotForm({
+                subjectId: sourceSlot.subjectId,
+                teacherId: sourceSlot.teacherId,
+                roomId: '', // Empty to force user selection
+                requiresLab: sourceSlot.requiresLab || false
+            });
+            return; // Stop here and wait for the modal to be submitted
+        }
 
         const targetSlots = getSlotsForCell(targetDay, targetPeriod.id);
         setIsLoading(true);
@@ -502,6 +569,29 @@ export default function Timetable() {
 
             fetchTimetable(selectedSessionId);
 
+        } catch(err) {
+            setGenerationError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const onDropToDock = async (e) => {
+        e.preventDefault();
+        const sourceSlotIdStr = e.dataTransfer.getData('sourceSlotId');
+        if (!sourceSlotIdStr) return;
+
+        const sourceSlotId = parseInt(sourceSlotIdStr, 10);
+        const sourceSlot = timetableSlots.find(s => s.id === sourceSlotId);
+
+        // If it's already in the dock, do nothing
+        if (!sourceSlot || !sourceSlot.dayOfWeek) return;
+
+        setIsLoading(true);
+        try {
+            await apiFetch(`http://localhost:8082/api/timetable/slot/${sourceSlotId}/dock`, { method: 'PUT' });
+            showNotification('Linked block moved to Holding Dock.');
+            fetchTimetable(selectedSessionId);
         } catch(err) {
             setGenerationError(err.message);
         } finally {
@@ -602,7 +692,7 @@ export default function Timetable() {
       } catch(err) { showNotification(err.message, 'error'); }
   };
 
-  const getSlotsForCell = (day, periodId) => timetableSlots.filter(slot => slot.dayOfWeek === day && slot.classPeriodId === periodId);
+    const getSlotsForCell = (day, periodId) => gridSlots.filter(slot => slot.dayOfWeek === day && slot.classPeriodId === periodId);
 
   const getBreakIcon = (type) => {
     switch (type) {
@@ -835,6 +925,14 @@ export default function Timetable() {
 
                 {exportMenuOpen && (
                     <div className="action-menu">
+                        <div
+                            className="action-menu-item"
+                            onClick={handlePrintPdf}
+                            style={{ opacity: (!selectedSessionId || timetableSlots.length === 0) ? 0.5 : 1, pointerEvents: (!selectedSessionId || timetableSlots.length === 0) ? 'none' : 'auto' }}
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            Print Current Session
+                        </div>
                         <div className="action-menu-item" onClick={handleExportSinglePdf} style={{ opacity: (!selectedSessionId || timetableSlots.length === 0) ? 0.5 : 1, pointerEvents: (!selectedSessionId || timetableSlots.length === 0) ? 'none' : 'auto' }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                             Current Session (PDF)
@@ -1058,6 +1156,49 @@ export default function Timetable() {
           </div>
         </div>
       )}
+
+        {/* --- STICKY HOLDING DOCK --- */}
+        {selectedSessionId && (
+            <div className="holding-dock-wrapper">
+                <div className="dock-header">
+                    <span>Holding Dock (Clipboard)</span>
+                    <span>{dockedBlocks.length} Block(s) Unassigned</span>
+                </div>
+                <div
+                    className="dock-droppable-area"
+                    onDragOver={onDragOver}
+                    onDrop={onDropToDock}
+                >
+                    {dockedBlocks.length === 0 ? (
+                        <div className="dock-empty-state">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span>Drag slots here to temporarily unassign them from the grid</span>
+                        </div>
+                    ) : (
+                        dockedBlocks.map(slot => {
+                            const sStyle = getSubjectStyle(slot.subjectName);
+                            return (
+                                <div
+                                    key={slot.id}
+                                    className="docked-slot-card"
+                                    draggable
+                                    onDragStart={(e) => onDragStart(e, slot)}
+                                    style={{ borderLeftColor: sStyle.border }}
+                                >
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: sStyle.text, marginBottom: '4px' }}>
+                                        {slot.subjectCode || slot.subjectName}
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                        {slot.teacherName}
+                                    </div>
+                                </div>
+                            )
+                        })
+                    )}
+                </div>
+            </div>
+        )}
     </div>
   );
 }

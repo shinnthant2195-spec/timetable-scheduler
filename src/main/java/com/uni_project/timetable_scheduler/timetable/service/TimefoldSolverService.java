@@ -234,11 +234,9 @@ public class TimefoldSolverService {
         Room room = roomRepo.findById(dto.roomId()).orElseThrow();
         Subject subject = subjectRepo.findById(dto.subjectId()).orElseThrow();
         ClassPeriod period = periodRepo.findById(dto.classPeriodId()).orElseThrow();
-
         boolean isLabBlock = dto.requiresLab() != null && dto.requiresLab();
 
-        // Pass null so it generates a [-1L] exclusion list
-        validationService.validateManualPlacement(teacher, session, room, subject, isLabBlock, dto.dayOfWeek(), period, null);
+        validationService.validateManualPlacement(teacher, List.of(session), room, subject, isLabBlock, dto.dayOfWeek(), period, null);
 
         TimetableSlot slot = new TimetableSlot();
         slot.setDayOfWeek(dto.dayOfWeek());
@@ -249,64 +247,123 @@ public class TimefoldSolverService {
         slot.setTeacher(teacher);
         slot.setRequiresLab(isLabBlock);
         slot.setStatus(TimetableSlot.TimetableStatus.DRAFT);
-
         slotRepo.save(slot);
     }
 
     @Transactional
     public void updateManualSlot(Long slotId, TimetableSlotUpdateRequestDTO dto) {
-        TimetableSlot slot = slotRepo.findById(slotId)
+        TimetableSlot originalSlot = slotRepo.findById(slotId)
                 .orElseThrow(() -> new IllegalArgumentException("Timetable slot not found"));
 
         Teacher teacher = teacherRepo.findById(dto.teacherId()).orElseThrow();
-        Session session = sessionRepo.findById(dto.sessionId()).orElseThrow();
         Room room = roomRepo.findById(dto.roomId()).orElseThrow();
         Subject subject = subjectRepo.findById(dto.subjectId()).orElseThrow();
         ClassPeriod period = periodRepo.findById(dto.classPeriodId()).orElseThrow();
-
         boolean isLabBlock = dto.requiresLab() != null && dto.requiresLab();
 
-        // Validate while explicitly excluding the current slot from double-booking checks
-        validationService.validateManualPlacement(teacher, session, room, subject, isLabBlock, dto.dayOfWeek(), period, List.of(slotId));
+        Integer roomId = originalSlot.getRoom() != null ? originalSlot.getRoom().getId() : null;
+        Long pId = originalSlot.getClassPeriod() != null ? originalSlot.getClassPeriod().getId() : null;
 
-        slot.setDayOfWeek(dto.dayOfWeek());
-        slot.setClassPeriod(period);
-        slot.setRoom(room);
-        slot.setSession(session);
-        slot.setSubject(subject);
-        slot.setTeacher(teacher);
-        slot.setRequiresLab(isLabBlock);
+        // 1. Fetch the entire Linked Block
+        List<TimetableSlot> linkedBlock = slotRepo.findLinkedBlocks(
+                originalSlot.getSubject().getId(), originalSlot.getTeacher().getId(),
+                roomId, originalSlot.getDayOfWeek(), pId
+        );
 
-        slotRepo.save(slot);
+        if (originalSlot.getDayOfWeek() == null) {
+            Map<Integer, TimetableSlot> sessionToSlotMap = new HashMap<>();
+            for (TimetableSlot slot : linkedBlock) {
+                sessionToSlotMap.putIfAbsent(slot.getSession().getId(), slot);
+            }
+            linkedBlock = new ArrayList<>(sessionToSlotMap.values());
+        }
+
+        List<Long> linkedSlotIds = linkedBlock.stream().map(TimetableSlot::getId).toList();
+        List<Session> linkedSessions = linkedBlock.stream().map(TimetableSlot::getSession).toList();
+
+        // 2. Validate the block as a single unit
+        validationService.validateManualPlacement(teacher, linkedSessions, room, subject, isLabBlock, dto.dayOfWeek(), period, linkedSlotIds);
+
+        // 3. Move them all together
+        for (TimetableSlot slot : linkedBlock) {
+            slot.setDayOfWeek(dto.dayOfWeek());
+            slot.setClassPeriod(period);
+            slot.setRoom(room);
+            slot.setSubject(subject);
+            slot.setTeacher(teacher);
+            slot.setRequiresLab(isLabBlock);
+        }
+        slotRepo.saveAll(linkedBlock);
+    }
+
+    @Transactional
+    public void dockSlot(Long slotId) {
+        TimetableSlot originalSlot = slotRepo.findById(slotId)
+                .orElseThrow(() -> new IllegalArgumentException("Timetable slot not found"));
+
+        Integer roomId = originalSlot.getRoom() != null ? originalSlot.getRoom().getId() : null;
+        Long periodId = originalSlot.getClassPeriod() != null ? originalSlot.getClassPeriod().getId() : null;
+
+        // Fetch the linked block using safe coordinates
+        List<TimetableSlot> linkedBlock = slotRepo.findLinkedBlocks(
+                originalSlot.getSubject().getId(), originalSlot.getTeacher().getId(),
+                roomId, originalSlot.getDayOfWeek(), periodId
+        );
+
+        // Wipe coordinates to send them to the void (Holding Dock)
+        for (TimetableSlot slot : linkedBlock) {
+            slot.setDayOfWeek(null);
+            slot.setClassPeriod(null);
+            slot.setRoom(null);
+        }
+        slotRepo.saveAll(linkedBlock);
     }
 
     @Transactional
     public void swapSlots(Long slotId1, Long slotId2) {
-        TimetableSlot slot1 = slotRepo.findById(slotId1).orElseThrow();
-        TimetableSlot slot2 = slotRepo.findById(slotId2).orElseThrow();
+        TimetableSlot source1 = slotRepo.findById(slotId1).orElseThrow();
+        TimetableSlot source2 = slotRepo.findById(slotId2).orElseThrow();
 
-        DayOfWeek day1 = slot1.getDayOfWeek();
-        ClassPeriod period1 = slot1.getClassPeriod();
-        Room room1 = slot1.getRoom();
+        // Cache original coordinates BEFORE mutating anything
+        DayOfWeek originalDay1 = source1.getDayOfWeek();
+        ClassPeriod originalPeriod1 = source1.getClassPeriod();
 
-        DayOfWeek day2 = slot2.getDayOfWeek();
-        ClassPeriod period2 = slot2.getClassPeriod();
-        Room room2 = slot2.getRoom();
+        DayOfWeek originalDay2 = source2.getDayOfWeek();
+        ClassPeriod originalPeriod2 = source2.getClassPeriod();
 
-        // By excluding BOTH IDs, we mathematically simulate pulling them entirely off
-        // the board before attempting to place them in each other's spaces.
-        List<Long> swappingIds = List.of(slotId1, slotId2);
+        // 1. Fetch BOTH linked blocks
+        List<TimetableSlot> block1 = slotRepo.findLinkedBlocks(
+                source1.getSubject().getId(), source1.getTeacher().getId(),
+                source1.getRoom().getId(), source1.getDayOfWeek(), source1.getClassPeriod().getId()
+        );
+        List<TimetableSlot> block2 = slotRepo.findLinkedBlocks(
+                source2.getSubject().getId(), source2.getTeacher().getId(),
+                source2.getRoom().getId(), source2.getDayOfWeek(), source2.getClassPeriod().getId()
+        );
 
-        validationService.validateManualPlacement(slot1.getTeacher(), slot1.getSession(), room1, slot1.getSubject(), slot1.getRequiresLab(), day2, period2, swappingIds);
-        validationService.validateManualPlacement(slot2.getTeacher(), slot2.getSession(), room2, slot2.getSubject(), slot2.getRequiresLab(), day1, period1, swappingIds);
+        List<Long> swappingIds = new java.util.ArrayList<>();
+        block1.forEach(s -> swappingIds.add(s.getId()));
+        block2.forEach(s -> swappingIds.add(s.getId()));
 
-        slot1.setDayOfWeek(day2);
-        slot1.setClassPeriod(period2);
+        List<Session> sessions1 = block1.stream().map(TimetableSlot::getSession).toList();
+        List<Session> sessions2 = block2.stream().map(TimetableSlot::getSession).toList();
 
-        slot2.setDayOfWeek(day1);
-        slot2.setClassPeriod(period1);
+        // 2. Cross-validate both masses
+        validationService.validateManualPlacement(source1.getTeacher(), sessions1, source1.getRoom(), source1.getSubject(), source1.getRequiresLab(), source2.getDayOfWeek(), source2.getClassPeriod(), swappingIds);
+        validationService.validateManualPlacement(source2.getTeacher(), sessions2, source2.getRoom(), source2.getSubject(), source2.getRequiresLab(), source1.getDayOfWeek(), source1.getClassPeriod(), swappingIds);
 
-        slotRepo.saveAll(List.of(slot1, slot2));
+        // 3. Swap temporal coordinates for the masses
+        block1.forEach(s -> {
+            s.setDayOfWeek(originalDay2);
+            s.setClassPeriod(originalPeriod2);
+        });
+        block2.forEach(s -> {
+            s.setDayOfWeek(originalDay1);
+            s.setClassPeriod(originalPeriod1);
+        });
+
+        slotRepo.saveAll(block1);
+        slotRepo.saveAll(block2);
     }
 
     @Transactional

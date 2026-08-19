@@ -27,10 +27,13 @@ public interface TimetableSlotRepository extends JpaRepository<TimetableSlot, Lo
 
     // Highly optimized fetch for the React Grid (Avoids N+1 Query Problem)
     @Query("SELECT new com.uni_project.timetable_scheduler.timetable.dto.TimetableSlotResponseDTO(" +
-            "t.id, t.dayOfWeek, t.classPeriod.id, t.subject.id, t.subject.subjectCode, t.subject.name, " +
-            "t.subject.subjectType, t.requiresLab, " + // <-- ADDED requiresLab HERE
-            "t.teacher.id, t.teacher.name, t.room.id, t.room.name, t.status) " +
-            "FROM TimetableSlot t WHERE t.session.id = :sessionId")
+            "t.id, t.dayOfWeek, cp.id, t.subject.id, t.subject.subjectCode, t.subject.name, " +
+            "t.subject.subjectType, t.requiresLab, " +
+            "t.teacher.id, t.teacher.name, r.id, r.name, t.status) " +
+            "FROM TimetableSlot t " +
+            "LEFT JOIN t.classPeriod cp " + // LEFT JOIN prevents null exclusion
+            "LEFT JOIN t.room r " +         // LEFT JOIN prevents null exclusion
+            "WHERE t.session.id = :sessionId")
     List<TimetableSlotResponseDTO> getSessionTimetable(@Param("sessionId") Integer sessionId);
 
     // Delete timeslot when a subject is removed.
@@ -63,17 +66,35 @@ public interface TimetableSlotRepository extends JpaRepository<TimetableSlot, Lo
     @Query("DELETE FROM TimetableSlot t WHERE t.status = 'PUBLISHED'")
     void deleteAllPublished();
 
-    // TimeSlot Validation
+    // Updated Query: Change `sessionId` to `sessionIds` (Collection) to check multiple cohorts at once
     @Query("SELECT t FROM TimetableSlot t " +
             "WHERE t.dayOfWeek = :day AND t.classPeriod.id = :periodId " +
             "AND t.id NOT IN :excludes " +
-            "AND (t.teacher.id = :teacherId OR t.session.id = :sessionId OR t.room.id = :roomId)")
+            "AND (t.teacher.id = :teacherId OR t.session.id IN :sessionIds OR t.room.id = :roomId)")
     List<TimetableSlot> findPotentialConflicts(
             @Param("teacherId") String teacherId,
-            @Param("sessionId") Integer sessionId,
+            @Param("sessionIds") Collection<Integer> sessionIds,
             @Param("roomId") Integer roomId,
             @Param("day") DayOfWeek day,
             @Param("periodId") Long periodId,
             @Param("excludes") Collection<Long> excludes
     );
+
+    // Finds all slots that make up a "Linked Block" (shared subject)
+    @Query("SELECT t FROM TimetableSlot t WHERE t.subject.id = :subjectId " +
+            "AND t.teacher.id = :teacherId " +
+            "AND (t.room.id = :roomId OR (t.room IS NULL AND :roomId IS NULL)) " +
+            "AND (t.dayOfWeek = :dayOfWeek OR (t.dayOfWeek IS NULL AND :dayOfWeek IS NULL)) " +
+            "AND (t.classPeriod.id = :periodId OR (t.classPeriod IS NULL AND :periodId IS NULL)) " +
+            "AND t.status = 'DRAFT'")
+    List<TimetableSlot> findLinkedBlocks(
+            @Param("subjectId") Integer subjectId,
+            @Param("teacherId") String teacherId,
+            @Param("roomId") Integer roomId,
+            @Param("dayOfWeek") DayOfWeek dayOfWeek,
+            @Param("periodId") Long periodId
+    );
+
+
+
 }

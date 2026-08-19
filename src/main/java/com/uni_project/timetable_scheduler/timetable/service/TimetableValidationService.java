@@ -30,26 +30,25 @@ public class TimetableValidationService {
     }
 
     // 1. Added excludeSlotIds parameter
-    public void validateManualPlacement(Teacher teacher, Session session, Room room, Subject subject, boolean requiresLab, DayOfWeek day, ClassPeriod period, Collection<Long> excludeSlotIds) {
-
-        // Safety fallback for empty NOT IN clauses
+    public void validateManualPlacement(Teacher teacher, List<Session> sessions, Room room, Subject subject, boolean requiresLab, DayOfWeek day, ClassPeriod period, Collection<Long> excludeSlotIds) {
         Collection<Long> excludes = (excludeSlotIds == null || excludeSlotIds.isEmpty()) ? List.of(-1L) : excludeSlotIds;
 
-        // Check WEDNESDAY Afternoons Slots For Extra Curricular
+        // Check WEDNESDAY Afternoons Slots For Extra Curricular (remains the same)
         if (day == DayOfWeek.WEDNESDAY) {
             LocalTime lunchEndTime = periodRepo.findAll().stream()
                     .filter(p -> p.getType() == ClassPeriod.PeriodType.LUNCH)
                     .map(ClassPeriod::getEndTime)
                     .findFirst()
                     .orElse(LocalTime.of(12, 0));
-
             if (!period.getStartTime().isBefore(lunchEndTime)) {
                 throw new IllegalArgumentException("Wednesday afternoon is reserved for Extra Curricular Activities. No classes allowed.");
             }
         }
 
-        if (session.getTotalStudent() > room.getCapacity()) {
-            throw new IllegalArgumentException("Room capacity is too small for this session.");
+        // ENTERPRISE FIX: Calculate the combined student count of the entire linked block
+        int totalMovingStudents = sessions.stream().mapToInt(Session::getTotalStudent).sum();
+        if (totalMovingStudents > room.getCapacity() && subject.getSubjectType() != Subject.SubjectType.ELECTIVE) {
+            throw new IllegalArgumentException("Combined session sizes (" + totalMovingStudents + ") exceed Room '" + room.getName() + "' capacity (" + room.getCapacity() + ").");
         }
 
         if (requiresLab && room.getRoomType() != Room.RoomType.LAB) {
@@ -64,39 +63,38 @@ public class TimetableValidationService {
             }
         }
 
+        // Pass the list of IDs to our newly updated repository method
+        List<Integer> sessionIds = sessions.stream().map(Session::getId).toList();
         List<TimetableSlot> potentialSlots = slotRepo.findPotentialConflicts(
-                teacher.getId(), session.getId(), room.getId(), day, period.getId(), excludes
+                teacher.getId(), sessionIds, room.getId(), day, period.getId(), excludes
         );
 
-        int aggregatedStudentCount = session.getTotalStudent();
+        int aggregatedStudentCount = totalMovingStudents;
 
-        for (TimetableSlot existing :  potentialSlots) {
-
-            // 1. Session Conflict Check
-            if (existing.getSession().getId().equals(session.getId())) {
+        for (TimetableSlot existing : potentialSlots) {
+            // 1. Session Conflict Check - Checks if ANY moving session overlaps
+            boolean isSessionConflict = sessions.stream().anyMatch(s -> s.getId().equals(existing.getSession().getId()));
+            if (isSessionConflict) {
                 boolean bothAreElectives = existing.getSubject().getSubjectType() == Subject.SubjectType.ELECTIVE &&
-                       subject.getSubjectType() == Subject.SubjectType.ELECTIVE;
-
+                        subject.getSubjectType() == Subject.SubjectType.ELECTIVE;
                 if (!bothAreElectives) {
-                    throw new IllegalArgumentException("Session '" + session.getName() + "' is double-booked (Only concurrent electives are allowed).");
+                    throw new IllegalArgumentException("One of the moving sessions is double-booked (Only concurrent electives are allowed).");
                 }
             }
 
-            // 2. Teacher Conflict Check
+            // 2. Teacher Conflict Check (remains the same)
             if (existing.getTeacher().getId().equals(teacher.getId())) {
                 boolean isSharedClass = existing.getSubject().getId().equals(subject.getId()) &&
-                        existing.getRoom().getId().equals(room.getId());
-
+                        existing.getRoom() != null && existing.getRoom().getId().equals(room.getId());
                 if (!isSharedClass) {
                     throw new IllegalArgumentException("Teacher '" + teacher.getName() + "' is double-booked with a different class or room.");
                 }
             }
 
-            // 3. Room Conflict Check
-            if (existing.getRoom().getId().equals(room.getId())) {
+            // 3. Room Conflict Check (remains the same)
+            if (existing.getRoom() != null && existing.getRoom().getId().equals(room.getId())) {
                 boolean isSharedClass = existing.getSubject().getId().equals(subject.getId()) &&
                         existing.getTeacher().getId().equals(teacher.getId());
-
                 if (!isSharedClass) {
                     throw new IllegalArgumentException("Room '" + room.getName() + "' is double-booked by another class.");
                 } else {

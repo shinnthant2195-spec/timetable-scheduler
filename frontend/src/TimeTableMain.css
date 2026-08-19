@@ -846,3 +846,79 @@ button.action-btn.generate-btn:hover:not(:disabled) {
 .action-menu-item:not(:last-child) {
     border-bottom: 1px solid #F3F4F6;
 }
+
+/* --- STICKY HOLDING DOCK --- */
+.holding-dock-wrapper {
+    position: sticky;
+    bottom: 0;
+    margin: 20px -32px -32px -32px; /* Pulls it flush with the page content edges */
+    background-color: #ffffff;
+    border-top: 2px solid #8B5CF6;
+    box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.05);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+}
+
+.dock-header {
+    background-color: #F5F3FF;
+    padding: 8px 24px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6D28D9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dock-droppable-area {
+    min-height: 100px;
+    padding: 16px 24px;
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    align-items: center;
+    background-image: repeating-linear-gradient(45deg, #F9FAFB 25%, transparent 25%, transparent 75%, #F9FAFB 75%, #F9FAFB), repeating-linear-gradient(45deg, #F9FAFB 25%, #ffffff 25%, #ffffff 75%, #F9FAFB 75%, #F9FAFB);
+    background-position: 0 0, 10px 10px;
+    background-size: 20px 20px;
+    transition: background-color 0.2s ease;
+}
+
+.dock-droppable-area.drag-over {
+    background-color: #EDE9FE;
+    border: 2px dashed #8B5CF6;
+}
+
+.docked-slot-card {
+    min-width: 180px;
+    height: 70px;
+    cursor: grab;
+    background: white;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    border-left: 6px solid #8B5CF6;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.docked-slot-card:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.dock-empty-state {
+    color: #9CA3AF;
+    font-size: 13px;
+    font-weight: 500;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
