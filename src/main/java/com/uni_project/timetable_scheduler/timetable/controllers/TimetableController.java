@@ -132,4 +132,12 @@ public class TimetableController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PutMapping("/slot/{id}/dock")
+    public ResponseEntity<Map<String, String>> dockSlot(@PathVariable Long id) {
+        solverService.dockSlot(id);
+        return ResponseEntity.ok(Map.of("message", "Linked block successfully moved to the Holding Dock."));
+    }
+
+
 }

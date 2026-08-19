@@ -103,6 +103,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     private Constraint consecutiveSubjectBlocks(ConstraintFactory factory) {
         return factory.forEachUniquePair(TimeSlot.class,
                 Joiners.equal(TimeSlot::getSubject),
+                Joiners.equal(TimeSlot::getRoom),
                 Joiners.equal(slot -> slot.getTimeslot().dayOfWeek()),
                         Joiners.equal(slot -> slot.getTimeslot().isMorning()))
                 .filter((slot1, slot2) -> Math.abs(slot1.getTimeslot().periodIndex() - slot2.getTimeslot().periodIndex()) == 1)
