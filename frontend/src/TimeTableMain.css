@@ -5,7 +5,7 @@
     gap: 20px;
     font-family: 'Inter', sans-serif;
 }
-  
+
 .timetable-header {
     display: flex;
     justify-content: space-between;
@@ -94,27 +94,27 @@
 }
 
 /* Nuclear Wipe Button */
-.nuclear-btn { 
-    background-color: #FEF2F2; 
-    color: #DC2626; 
-    border: 1px solid #FECACA; 
+.nuclear-btn {
+    background-color: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
 }
-.nuclear-btn:hover:not(:disabled) { 
-    background-color: #FEE2E2; 
-    color: #B91C1C; 
+.nuclear-btn:hover:not(:disabled) {
+    background-color: #FEE2E2;
+    color: #B91C1C;
 }
 
-button.action-btn.generate-btn { 
-    background-color: #8B5CF6; 
-    color: white; 
+button.action-btn.generate-btn {
+    background-color: #8B5CF6;
+    color: white;
     border: 1px solid transparent;
     transition: all 0.2s ease;
 }
 
-button.action-btn.generate-btn:hover:not(:disabled) { 
-    background-color: #6D28D9 !important; 
+button.action-btn.generate-btn:hover:not(:disabled) {
+    background-color: #6D28D9 !important;
     box-shadow: 0 4px 12px rgba(109, 40, 217, 0.4) !important;
-    transform: translateY(-2px) !important; 
+    transform: translateY(-2px) !important;
 }
 
 .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
@@ -279,14 +279,13 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     border-right: 1px solid #E5E7EB;
     padding: 4px;
     vertical-align: top;
-    height: 70px; 
+    height: 70px;
 }
 
 .time-cell {
     background-color: #F9FAFB;
     text-align: center;
-    /* REMOVED flexbox properties here so the table engine can stretch it */
-    vertical-align: middle; 
+    vertical-align: middle;
 }
 
 .period-title { font-size: 12px; font-weight: 700; color: #111827; }
@@ -302,8 +301,8 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     background-color: #F8FAFC;
     border-top: 1px solid #E2E8F0;
     border-bottom: 1px solid #E2E8F0;
-    padding: 0; 
-    height: 36px; 
+    padding: 0;
+    height: 36px;
 }
 
 .break-label {
@@ -342,7 +341,7 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     border-radius: 4px;
     border-left-width: 4px !important;
     padding: 6px 8px;
-    height: calc(100% - 12px); 
+    height: calc(100% - 12px);
     cursor: grab;
     position: relative;
     display: flex;
@@ -392,8 +391,8 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(243, 244, 246, 0.7); 
-    backdrop-filter: blur(4px); 
+    background-color: rgba(243, 244, 246, 0.7);
+    backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -404,12 +403,12 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     background-color: #ffffff;
     width: 90%;
     max-width: 480px;
-    max-height: 85vh; 
-    border-radius: 16px; 
+    max-height: 85vh;
+    border-radius: 16px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
+    overflow: hidden;
     animation: modalPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -443,10 +442,10 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     padding: 6px;
     margin: 0;
     border-radius: 6px;
-    position: static !important; 
+    position: static !important;
 }
-.tm-modal-close-btn:hover { 
-    color: #EF4444; 
+.tm-modal-close-btn:hover {
+    color: #EF4444;
     background-color: #FEF2F2;
 }
 
@@ -457,7 +456,7 @@ button.action-btn.generate-btn:hover:not(:disabled) {
 }
 
 .period-form {
-    background-color: #F9FAFB; 
+    background-color: #F9FAFB;
     padding: 20px;
     border-radius: 12px;
     border: 1px solid #E5E7EB;
@@ -503,8 +502,8 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     transition: box-shadow 0.2s, border-color 0.2s;
 }
 
-.period-item:hover { 
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+.period-item:hover {
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     border-color: #D1D5DB;
 }
 
@@ -538,8 +537,8 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     transition: all 0.2s;
 }
 
-.delete-icon:hover { 
-    background-color: #FEF2F2; 
+.delete-icon:hover {
+    background-color: #FEF2F2;
     color: #EF4444;
 }
 
@@ -548,7 +547,7 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     background-color: #ffffff;
     width: 90%;
     max-width: 420px;
-    height: auto; 
+    height: auto;
     padding: 32px 24px;
     border-radius: 16px;
     text-align: center;
@@ -730,7 +729,7 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     background-color: #F8FAFC;
     border-left: 1px solid #E2E8F0;
     border-right: 1px solid #E2E8F0;
-    width: 40px; 
+    width: 40px;
     padding: 0;
 }
 
@@ -745,16 +744,12 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     color: #64748B;
     letter-spacing: 3px;
     text-transform: uppercase;
-    /* Enterprise trick to rotate text vertically */
     writing-mode: vertical-rl;
     transform: rotate(180deg);
 }
 
-/* Ensure empty cells stretch fully to match expanded sibling cells */
 .drop-zone {
-    /* Enterprise Table Hack: 1px height forces the cell to stretch to the 
-       row's intrinsic height, allowing child divs to use height: 100% */
-    height: 1px; 
+    height: 1px;
 }
 
 .drop-zone > div {
@@ -810,6 +805,7 @@ button.action-btn.generate-btn:hover:not(:disabled) {
 .danger-item:last-child {
     border-bottom: none;
 }
+
 /* --- STANDARD ACTION MENU (For Exports) --- */
 .action-menu {
     position: absolute;
@@ -847,23 +843,47 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     border-bottom: 1px solid #F3F4F6;
 }
 
-/* --- STICKY HOLDING DOCK --- */
-.holding-dock-wrapper {
-    position: sticky;
-    bottom: 0;
-    margin: 20px -32px -32px -32px; /* Pulls it flush with the page content edges */
-    background-color: #ffffff;
-    border-top: 2px solid #8B5CF6;
-    box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.05);
-    z-index: 40;
+/* ========================================================= */
+/* --- NEW MAIN AREA LAYOUT (Replaces Bottom Dock Code) --- */
+/* ========================================================= */
+.timetable-main-area {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+/* --- LEFT SIDE HOLDING DOCK --- */
+.left-dock-container {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    flex-shrink: 0;
+    max-height: 80vh;
+}
+
+.left-dock-container.open {
+    width: 320px;
+    opacity: 1;
+}
+
+.left-dock-container.closed {
+    width: 0;
+    border: none;
+    opacity: 0;
+    margin-right: -20px; /* Consumes the gap so the grid expands perfectly */
 }
 
 .dock-header {
     background-color: #F5F3FF;
-    padding: 8px 24px;
-    font-size: 12px;
+    padding: 16px 20px;
+    font-size: 13px;
     font-weight: 700;
     color: #6D28D9;
     text-transform: uppercase;
@@ -871,54 +891,120 @@ button.action-btn.generate-btn:hover:not(:disabled) {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #EDE9FE;
 }
 
-.dock-droppable-area {
-    min-height: 100px;
-    padding: 16px 24px;
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
-    align-items: center;
+.dock-count {
+    background-color: #8B5CF6;
+    color: white;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+
+.dock-droppable-area.square-grid {
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    overflow-y: auto;
+    flex: 1;
     background-image: repeating-linear-gradient(45deg, #F9FAFB 25%, transparent 25%, transparent 75%, #F9FAFB 75%, #F9FAFB), repeating-linear-gradient(45deg, #F9FAFB 25%, #ffffff 25%, #ffffff 75%, #F9FAFB 75%, #F9FAFB);
     background-position: 0 0, 10px 10px;
     background-size: 20px 20px;
-    transition: background-color 0.2s ease;
 }
 
-.dock-droppable-area.drag-over {
+.dock-droppable-area.square-grid.drag-over {
     background-color: #EDE9FE;
     border: 2px dashed #8B5CF6;
 }
 
-.docked-slot-card {
-    min-width: 180px;
-    height: 70px;
-    cursor: grab;
-    background: white;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-    border-radius: 8px;
-    border-left: 6px solid #8B5CF6;
-    padding: 8px 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: transform 0.2s;
-}
-
-.docked-slot-card:active {
-    cursor: grabbing;
-    transform: scale(0.95);
-}
-
 .dock-empty-state {
-    color: #9CA3AF;
-    font-size: 13px;
-    font-weight: 500;
-    width: 100%;
-    text-align: center;
+    grid-column: span 2;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    color: #9CA3AF;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.docked-slot-card.square {
+    aspect-ratio: 1;
+    cursor: grab;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    border-top: 4px solid #8B5CF6;
+    border-left: 1px solid #E5E7EB;
+    border-right: 1px solid #E5E7EB;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+}
+
+.docked-slot-card.square:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.square-code {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+
+.square-teacher {
+    font-size: 11px;
+    color: #6B7280;
+    font-weight: 500;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- RIGHT SIDE GRID COLUMN --- */
+.grid-column {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.grid-actions-row {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.dock-toggle-btn {
+    background-color: white;
+    border: 1px solid #D1D5DB;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
     gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.dock-toggle-btn:hover {
+    background-color: #F3F4F6;
+    border-color: #9CA3AF;
+    color: #111827;
 }
