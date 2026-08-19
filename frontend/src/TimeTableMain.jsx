@@ -139,7 +139,7 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, placeholder, c
 // ==========================================
 // MAIN TIMETABLE COMPONENT
 // ==========================================
-export default function Timetable() {
+export default function Timetable({ isDockOpen, setIsDockOpen, setIsFocusMode }) {
   const [sessions, setSessions] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -973,130 +973,191 @@ export default function Timetable() {
         </div>
       </div>
 
-      {/* THE GRID: X-axis = Days, Y-axis = Periods */}
-      {selectedSessionId ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div className="grid-wrapper">
-          <table className="timetable-grid compact">
-            <thead>
-              <tr>
-                <th className="time-col">Time</th>
-                {daysOfWeek.map(day => <th key={day}>{day}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {classPeriods.map(period => (
-                <tr key={period.id}>
-                  {/* Y-Axis Period Label: Flexbox ensures it stretches and stays centered vertically */}
-                  <td className="time-cell" style={{ verticalAlign: 'middle', height: '100%', minHeight: '70px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                        <div className="period-title">{period.name}</div>
-                        <div className="period-time">{period.startTime.substring(0,5)} - {period.endTime.substring(0,5)}</div>
-                    </div>
-                  </td>
+        {/* THE GRID: X-axis = Days, Y-axis = Periods */}
+        {selectedSessionId ? (
+            <div className="timetable-main-area">
 
-                  {/* PERFECTLY CENTERED BREAK/LUNCH BANNERS */}
-                  {period.type !== 'LECTURE' ? (
-                     <td colSpan="5" className="drop-zone non-instructional">
-                        <div className="break-label">
-                          {getBreakIcon(period.type)}
-                          <span>{period.name || period.type}</span>
+                {/* --- NEW: LEFT SIDE COLLAPSIBLE DOCK --- */}
+                <div className={`left-dock-container ${isDockOpen ? 'open' : 'closed'}`}>
+                    <div className="dock-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span>Holding Dock</span>
                         </div>
-                     </td>
-                  ) : (
-                    // NORMAL CLASSES
-                    daysOfWeek.map(day => {
-                    const slotsInCell = getSlotsForCell(day, period.id);
-                    return (
-                        <td
-                           key={`${day}-${period.id}`}
-                           className="drop-zone"
-                          onDragOver={onDragOver}
-                          onDrop={(e) => onDrop(e, day, period)}
-                          onClick={() => { if (slotsInCell.length === 0) openAddSlotModal(day, period.id); }}
-                          style={{ cursor: slotsInCell.length === 0 ? 'pointer' : 'default', verticalAlign: 'top' }}
-                        >
-                          {slotsInCell.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', height: '100%' }}>
-                              {slotsInCell.map(slot => {
+                        <span className="dock-count">{dockedBlocks.length}</span>
+                    </div>
+                    <div
+                        className="dock-droppable-area square-grid"
+                        onDragOver={onDragOver}
+                        onDrop={onDropToDock}
+                    >
+                        {dockedBlocks.length === 0 ? (
+                            <div className="dock-empty-state">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginBottom: '8px', opacity: 0.5}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                <span>Drag slots here</span>
+                            </div>
+                        ) : (
+                            dockedBlocks.map(slot => {
                                 const sStyle = getSubjectStyle(slot.subjectName);
                                 return (
-                                  <div
-                                    key={slot.id}
-                                    className="slot-card"
-                                    draggable
-                                    onDragStart={(e) => onDragStart(e, slot)}
-                                    onClick={(e) => { e.stopPropagation(); openEditSlotModal(slot); }}
-                                    title={`Click to Edit | Drag to Move\n${slot.subjectName} - ${slot.teacherName}`}
-                                    style={{
-                                       flex: 1, minHeight: 0,
-                                       backgroundColor: sStyle.bg,
-                                       borderLeftColor: sStyle.border,
-                                      border: `1px solid ${sStyle.border}`
-                                    }}
-                                  >
-                                      {/* Updated grid layout for the badge */}
-                                      <div className="slot-subject" style={{ color: sStyle.text, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    <div
+                                        key={slot.id}
+                                        className="docked-slot-card square"
+                                        draggable
+                                        onDragStart={(e) => onDragStart(e, slot)}
+                                        style={{ borderTopColor: sStyle.border }}
+                                    >
+                                        <div className="square-code" style={{ color: sStyle.text }}>
                                             {slot.subjectCode || slot.subjectName}
-                                        </span>
-                                          {slot.requiresLab && (
-                                              <span style={{ backgroundColor: '#FEE2E2', color: '#991B1B', fontSize: '8px', padding: '2px 4px', borderRadius: '4px', border: '1px solid #FCA5A5', flexShrink: 0 }}>
-                                                LAB
-                                            </span>
-                                          )}
-                                      </div>
-                                    <div className="slot-teacher">
-                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-                                      {slot.roomName}
+                                        </div>
+                                        <div className="square-teacher">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: '3px'}}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                            {slot.teacherName}
+                                        </div>
                                     </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <div className="empty-slot-hint">+ Add / Drop</div>
-                          )}
-                        </td>
-                      );
-                    })
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Bottom Legend Section */}
-        {timetableSlots.length > 0 && (
-              <div className="timetable-legend">
-                <h4>Subject & Teacher Reference</h4>
-                <div className="legend-grid">
-                  {getUniqueLegendInfo().map((info, idx) => {
-                    const sStyle = getSubjectStyle(info.name);
-                    return (
-                      <div key={idx} className="legend-item">
-                        <span className="legend-code" style={{ backgroundColor: sStyle.bg, color: sStyle.text, border: `1px solid ${sStyle.border}` }}>
-                          {info.code}
-                        </span>
-                        <div className="legend-details">
-                          <span className="legend-name">{info.name}</span>
-                          <span className="legend-teacher">{info.teacher}</span>
-                        </div>
-                      </div>
-                    )
-                  })}
+                                )
+                            })
+                        )}
+                    </div>
                 </div>
-              </div>
-            )}
-        </div>
 
-      ) : (
-        <div className="empty-state">
-           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-           <p>Select a Session to view or generate its timetable.</p>
-        </div>
-      )}
+                {/* --- RIGHT SIDE: TIMETABLE GRID --- */}
+                <div className="grid-column">
+
+                    {/* Dock Toggle Button Row */}
+                    <div className="grid-actions-row">
+                        <button className="dock-toggle-btn" onClick={() => {
+                            const newState = !isDockOpen;
+                            setIsDockOpen(newState);
+                            // Automatically trigger focus mode when opening the dock for max space
+                            if (newState && setIsFocusMode) setIsFocusMode(true);
+                        }}>
+                            {isDockOpen ? (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            ) : (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                            )}
+                            {isDockOpen ? 'Close Dock' : 'Open Holding Dock'}
+                        </button>
+                    </div>
+
+                    <div className="grid-wrapper">
+                        <table className="timetable-grid compact">
+                            <thead>
+                            <tr>
+                                <th className="time-col">Time</th>
+                                {daysOfWeek.map(day => <th key={day}>{day}</th>)}
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {classPeriods.map(period => (
+                                <tr key={period.id}>
+                                    <td className="time-cell" style={{ verticalAlign: 'middle', height: '100%', minHeight: '70px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                                            <div className="period-title">{period.name}</div>
+                                            <div className="period-time">{period.startTime.substring(0,5)} - {period.endTime.substring(0,5)}</div>
+                                        </div>
+                                    </td>
+
+                                    {period.type !== 'LECTURE' ? (
+                                        <td colSpan="5" className="drop-zone non-instructional">
+                                            <div className="break-label">
+                                                {getBreakIcon(period.type)}
+                                                <span>{period.name || period.type}</span>
+                                            </div>
+                                        </td>
+                                    ) : (
+                                        daysOfWeek.map(day => {
+                                            const slotsInCell = getSlotsForCell(day, period.id);
+                                            return (
+                                                <td
+                                                    key={`${day}-${period.id}`}
+                                                    className="drop-zone"
+                                                    onDragOver={onDragOver}
+                                                    onDrop={(e) => onDrop(e, day, period)}
+                                                    onClick={() => { if (slotsInCell.length === 0) openAddSlotModal(day, period.id); }}
+                                                    style={{ cursor: slotsInCell.length === 0 ? 'pointer' : 'default', verticalAlign: 'top' }}
+                                                >
+                                                    {slotsInCell.length > 0 ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', height: '100%' }}>
+                                                            {slotsInCell.map(slot => {
+                                                                const sStyle = getSubjectStyle(slot.subjectName);
+                                                                return (
+                                                                    <div
+                                                                        key={slot.id}
+                                                                        className="slot-card"
+                                                                        draggable
+                                                                        onDragStart={(e) => onDragStart(e, slot)}
+                                                                        onClick={(e) => { e.stopPropagation(); openEditSlotModal(slot); }}
+                                                                        title={`Click to Edit | Drag to Move\n${slot.subjectName} - ${slot.teacherName}`}
+                                                                        style={{
+                                                                            flex: 1, minHeight: 0,
+                                                                            backgroundColor: sStyle.bg,
+                                                                            borderLeftColor: sStyle.border,
+                                                                            border: `1px solid ${sStyle.border}`
+                                                                        }}
+                                                                    >
+                                                                        <div className="slot-subject" style={{ color: sStyle.text, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {slot.subjectCode || slot.subjectName}
+                                                </span>
+                                                                            {slot.requiresLab && (
+                                                                                <span style={{ backgroundColor: '#FEE2E2', color: '#991B1B', fontSize: '8px', padding: '2px 4px', borderRadius: '4px', border: '1px solid #FCA5A5', flexShrink: 0 }}>
+                                                        LAB
+                                                    </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="slot-teacher">
+                                                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                                                                            {slot.roomName}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="empty-slot-hint">+ Add / Drop</div>
+                                                    )}
+                                                </td>
+                                            );
+                                        })
+                                    )}
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Bottom Legend Section */}
+                    {timetableSlots.length > 0 && (
+                        <div className="timetable-legend">
+                            <h4>Subject & Teacher Reference</h4>
+                            <div className="legend-grid">
+                                {getUniqueLegendInfo().map((info, idx) => {
+                                    const sStyle = getSubjectStyle(info.name);
+                                    return (
+                                        <div key={idx} className="legend-item">
+                                <span className="legend-code" style={{ backgroundColor: sStyle.bg, color: sStyle.text, border: `1px solid ${sStyle.border}` }}>
+                                  {info.code}
+                                </span>
+                                            <div className="legend-details">
+                                                <span className="legend-name">{info.name}</span>
+                                                <span className="legend-teacher">{info.teacher}</span>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        ) : (
+            <div className="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                <p>Select a Session to view or generate its timetable.</p>
+            </div>
+        )}
 
       {/* --- CENTERED FLOATING PERIOD MODAL --- */}
       {showPeriodModal && (
@@ -1157,48 +1218,7 @@ export default function Timetable() {
         </div>
       )}
 
-        {/* --- STICKY HOLDING DOCK --- */}
-        {selectedSessionId && (
-            <div className="holding-dock-wrapper">
-                <div className="dock-header">
-                    <span>Holding Dock (Clipboard)</span>
-                    <span>{dockedBlocks.length} Block(s) Unassigned</span>
-                </div>
-                <div
-                    className="dock-droppable-area"
-                    onDragOver={onDragOver}
-                    onDrop={onDropToDock}
-                >
-                    {dockedBlocks.length === 0 ? (
-                        <div className="dock-empty-state">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            <span>Drag slots here to temporarily unassign them from the grid</span>
-                        </div>
-                    ) : (
-                        dockedBlocks.map(slot => {
-                            const sStyle = getSubjectStyle(slot.subjectName);
-                            return (
-                                <div
-                                    key={slot.id}
-                                    className="docked-slot-card"
-                                    draggable
-                                    onDragStart={(e) => onDragStart(e, slot)}
-                                    style={{ borderLeftColor: sStyle.border }}
-                                >
-                                    <div style={{ fontSize: '13px', fontWeight: '700', color: sStyle.text, marginBottom: '4px' }}>
-                                        {slot.subjectCode || slot.subjectName}
-                                    </div>
-                                    <div style={{ fontSize: '11px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                        {slot.teacherName}
-                                    </div>
-                                </div>
-                            )
-                        })
-                    )}
-                </div>
-            </div>
-        )}
+
     </div>
   );
 }
