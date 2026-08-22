@@ -54,22 +54,6 @@ public class SessionService {
                 subjects
         );
     }
-    /*
-    private SessionResponseDTO mapToDTO(Session s) {
-        List<SubjectLabelDTO> subList = s.getSubjects().stream()
-                .map(sub -> new SubjectLabelDTO(sub.getId(), sub.getName(), sub.getSubjectCode()))
-                .toList();
-
-        return new SessionResponseDTO(
-                s.getId(),
-                s.getName(),
-                s.getMajor() != null ? s.getMajor().getId() : null,
-                s.getMajor() != null ? s.getMajor().getName() : "Unassigned",
-                s.getTotalStudent(),
-                subList
-        );
-    }
-     */
 
     public Session createSessionFromDTO(SessionCreationDTO dto) {
         Session session = sessionMapper.createSessionFromDTO(dto);

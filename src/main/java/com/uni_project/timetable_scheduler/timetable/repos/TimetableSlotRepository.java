@@ -95,6 +95,9 @@ public interface TimetableSlotRepository extends JpaRepository<TimetableSlot, Lo
             @Param("periodId") Long periodId
     );
 
-
+    @Query("SELECT t FROM TimetableSlot t WHERE " +
+            "t.classPeriod IS NULL AND t.room IS NULL AND " +
+            "t.session.id =:sessionId")
+    List<TimetableSlot> getUnassignedSlots(@Param("sessionId") Integer sessionId);
 
 }
