@@ -438,6 +438,40 @@ export default function Timetable({ isDockOpen, setIsDockOpen, setIsFocusMode })
     }
   };
 
+    const handlePopulate = async () => {
+        const confirmPopulate = window.confirm("Populate the Holding Dock with all required curriculum blocks? \n\nNote: This will wipe any existing draft schedules so you can start fresh.");
+        if (!confirmPopulate) return;
+
+        setIsLoading(true);
+        setGenerationError(null);
+
+        try {
+            const res = await fetch(`http://localhost:8082/api/timetable/populate/all`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ excludedTeacherIds: excludedTeacherIds })
+            });
+
+            if (!res.ok) {
+                let errMsg = "Failed to populate the holding dock.";
+                try {
+                    const errData = await res.json();
+                    if (errData.message) errMsg = errData.message;
+                } catch(e) {}
+                throw new Error(errMsg);
+            }
+
+            showNotification('Holding dock successfully populated!');
+            // Re-fetch the timetable to pull the newly generated unassigned slots into the UI
+            if (selectedSessionId) fetchTimetable(selectedSessionId);
+
+        } catch (error) {
+            setGenerationError(error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
   const handlePublish = async () => {
     if (!window.confirm("Publish this schedule? This will finalize the draft and make it visible to students.")) return;
 
@@ -858,6 +892,17 @@ export default function Timetable({ isDockOpen, setIsDockOpen, setIsFocusMode })
           <p>Configure Timetable Structure and generate for all sessions</p>
         </div>
         <div className="header-right" style={{ display: 'flex', gap: '12px' }}>
+
+            {/* NEW: Manual Populate Button */}
+            <button
+                className="secondary-btn icon-btn"
+                onClick={handlePopulate}
+                disabled={isSolving || isLoading}
+                title="Pre-fill the Holding Dock with unassigned blocks"
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Populate Dock
+            </button>
 
             <button
                 className="action-btn generate-btn"

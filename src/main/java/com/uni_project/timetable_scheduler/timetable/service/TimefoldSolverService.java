@@ -108,7 +108,7 @@ public class TimefoldSolverService {
                     dbSlot.setClassPeriod(periodRepo.getReferenceById(aiSlot.getTimeslot().classPeriodId()));
                 }
 
-                if (aiSlot.getRequiresLab() != null) {
+                if (aiSlot.getRoom() != null) {
                     dbSlot.setRoom(roomRepo.getReferenceById(aiSlot.getRoom().id()));
                 }
 
