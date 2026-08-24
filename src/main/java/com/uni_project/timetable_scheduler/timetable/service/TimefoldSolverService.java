@@ -12,14 +12,17 @@ import com.uni_project.timetable_scheduler.subject.Subject;
 import com.uni_project.timetable_scheduler.subject.SubjectRepository;
 import com.uni_project.timetable_scheduler.teacher.Teacher;
 import com.uni_project.timetable_scheduler.teacher.TeacherRepository;
+import com.uni_project.timetable_scheduler.timetable.dto.TimetableSlotResponseDTO;
 import com.uni_project.timetable_scheduler.timetable.dto.TimetableSlotUpdateRequestDTO;
 import com.uni_project.timetable_scheduler.timetable.entities.TeacherAvailability;
 import com.uni_project.timetable_scheduler.timetable.entities.TimetableSlot;
 import com.uni_project.timetable_scheduler.timetable.repos.TeacherAvailabilityRepository;
 import com.uni_project.timetable_scheduler.timetable.repos.TimetableSlotRepository;
 import com.uni_project.timetable_scheduler.timetable.solver.TimeSlot;
+import com.uni_project.timetable_scheduler.timetable.solver.TimetableFactory;
 import com.uni_project.timetable_scheduler.timetable.solver.TimetableSchedule;
 import com.uni_project.timetable_scheduler.timetable.solver.fact.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -44,6 +47,7 @@ public class TimefoldSolverService {
     private final TeacherAvailabilityRepository availabilityRepo;
     private final TransactionTemplate txTemplate;
     private final TimetableValidationService validationService;
+    private final TimetableFactory timetableFactory;
 
     public TimefoldSolverService(
             SolverManager<TimetableSchedule> solverManager, TimetableSlotRepository slotRepo,
@@ -51,7 +55,8 @@ public class TimefoldSolverService {
             ClassPeriodRepository periodRepo, SubjectRepository subjectRepo,
             TeacherAvailabilityRepository availabilityRepo,
             TransactionTemplate txTemplate,
-            TimetableValidationService validationService) {
+            TimetableValidationService validationService,
+            TimetableFactory timetableFactory) {
         this.solverManager = solverManager;
         this.slotRepo = slotRepo;
         this.sessionRepo = sessionRepo;
@@ -62,122 +67,23 @@ public class TimefoldSolverService {
         this.availabilityRepo = availabilityRepo;
         this.txTemplate = txTemplate;
         this.validationService = validationService;
+        this.timetableFactory = timetableFactory;
     }
 
     public SolverStatus getSolverStatus() {
         return solverManager.getSolverStatus(TENANT_ID);
     }
 
+    @Transactional
+    public void populateUnassignedSlots(List<String> excludedTeacherIds) {
+        TimetableSchedule problem = timetableFactory.populateTimeslots(excludedTeacherIds);
+        saveSolution(problem);
+    }
+
+
     @Transactional(readOnly = true)
     public void generateGlobalScheduleAsync(List<String> excludedTeacherIds) {
-        // 1. Fetch Master Data
-        List<Session> sessions = sessionRepo.findAll();
-        List<ClassPeriod> allPeriods = periodRepo.findAll();
-
-        LocalTime lunchEndTime = allPeriods.stream()
-                .filter(cp -> cp.getType() == ClassPeriod.PeriodType.LUNCH)
-                .map(ClassPeriod::getEndTime)
-                .findFirst()
-                .orElse(LocalTime.of(12, 0));
-
-        List<ClassPeriod> lecturePeriods = allPeriods.stream()
-                .filter(cp -> cp.getType() == ClassPeriod.PeriodType.LECTURE)
-                .sorted(Comparator.comparing(ClassPeriod::getStartTime))
-                .toList();
-
-        List<DayOfWeek> days = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
-
-        // 2. Flatten Timeslot Grid (With Search Space Pruning)
-        List<TimeslotFact> timeslotFacts = new ArrayList<>();
-        int pIndex = 1;
-        for (ClassPeriod p : lecturePeriods) {
-            boolean isMorning = p.getStartTime().isBefore(lunchEndTime);
-
-            for (DayOfWeek d : days) {
-
-                // Search Space Pruning: Exclude Wednesday afternoons for Extra Curricular Activities
-                if (d == DayOfWeek.WEDNESDAY && !p.getStartTime().isBefore(lunchEndTime)) {
-                    continue;
-                }
-                timeslotFacts.add(new TimeslotFact(d.name() + "-" + p.getId(), d, p.getId(), pIndex, isMorning));
-            }
-            pIndex++;
-        }
-
-        // 3. Map Rooms
-        List<RoomFact> roomFacts = roomRepo.findAll().stream()
-                .map(r -> new RoomFact(r.getId(), r.getCapacity(), r.getRoomType()))
-                .toList();
-
-        // 4. Filter Teachers
-        List<Teacher> allTeachers = teacherRepo.findAll();
-        if (excludedTeacherIds != null && !excludedTeacherIds.isEmpty()) {
-            allTeachers.removeIf(t -> excludedTeacherIds.contains(t.getId()));
-        }
-        List<TeacherAvailability> allAvailabilities = availabilityRepo.findAll();
-        Map<String, Integer> teacherLoad = new HashMap<>();
-        allTeachers.forEach(t -> teacherLoad.put(t.getId(), 0));
-
-        // 5. Build Curriculum Payload (Enterprise Grouping Strategy)
-        List<TimeSlot> unassignedSlots = new ArrayList<>();
-        long slotIdCounter = 1L;
-
-        // Group Sessions by Subject
-        Map<Subject, List<Session>> subjectToSessionsMap = new HashMap<>();
-        for (Session session : sessions) {
-            for (Subject subject : session.getSubjects()) {
-                subjectToSessionsMap.computeIfAbsent(subject, k -> new ArrayList<>()).add(session);
-            }
-        }
-
-        // Generate unified AI TimeSlots
-        for (Map.Entry<Subject, List<Session>> entry : subjectToSessionsMap.entrySet()) {
-            Subject subject = entry.getKey();
-            List<Session> linkedSessions = entry.getValue();
-
-            List<SessionFact> sessionFacts = linkedSessions.stream()
-                    .map(s -> new SessionFact(s.getId(), s.getTotalStudent()))
-                    .toList();
-            SubjectFact subjectFact = new SubjectFact(subject.getId(), subject.getLabPeriods(), subject.getSubjectType());
-
-            List<Teacher> validTeachers = allTeachers.stream()
-                    .filter(t -> t.getTeacherSubjects().stream().anyMatch(ts -> ts.getSubject().getId().equals(subject.getId())))
-                    .toList();
-
-            if (validTeachers.isEmpty()) {
-                throw new IllegalStateException("No available teacher for subject: " + subject.getName());
-            }
-
-            int labQuota = subject.getLabPeriods() != null ? subject.getLabPeriods() : 0;
-
-            for (int i = 0; i < subject.getTotalWeeklyPeriod(); i++) {
-                Teacher assignedTeacher = validTeachers.stream()
-                        .min(Comparator.comparing(t -> teacherLoad.get(t.getId())))
-                        .orElseThrow();
-                teacherLoad.put(assignedTeacher.getId(), teacherLoad.get(assignedTeacher.getId()) + 1);
-
-                Set<String> blockedTimeslots = new HashSet<>();
-                if (assignedTeacher.getTeacherType() == Teacher.TeacherType.PART_TIME) {
-                    Set<String> availableIds = allAvailabilities.stream()
-                            .filter(a -> a.getTeacher().getId().equals(assignedTeacher.getId()))
-                            .map(a -> a.getDayOfWeek().name() + "-" + a.getClassPeriod().getId())
-                            .collect(Collectors.toSet());
-                    timeslotFacts.forEach(tf -> {
-                        if (!availableIds.contains(tf.id())) blockedTimeslots.add(tf.id());
-                    });
-                }
-
-                TeacherFact teacherFact = new TeacherFact(assignedTeacher.getId(), assignedTeacher.getTeacherType(), blockedTimeslots);
-
-                TimeSlot aiSlot = new TimeSlot(slotIdCounter++, sessionFacts, subjectFact, teacherFact);
-
-                aiSlot.setRequiresLab(i <  labQuota);
-
-                unassignedSlots.add(aiSlot);
-            }
-        }
-
-        TimetableSchedule problem = new TimetableSchedule(unassignedSlots, roomFacts, timeslotFacts);
+        TimetableSchedule problem = timetableFactory.populateTimeslots(excludedTeacherIds);
 
         // 6. Launch Asynchronous Solver Thread
         solverManager.solve(TENANT_ID, problem, solution -> {
@@ -196,10 +102,16 @@ public class TimefoldSolverService {
             for (SessionFact sessionFact : aiSlot.getSessions()) {
                 TimetableSlot dbSlot = new TimetableSlot();
 
-                dbSlot.setDayOfWeek(aiSlot.getTimeslot().dayOfWeek());
-                // getReferenceById prevents N+1 SELECT queries during this mapping phase!
-                dbSlot.setClassPeriod(periodRepo.getReferenceById(aiSlot.getTimeslot().classPeriodId()));
-                dbSlot.setRoom(roomRepo.getReferenceById(aiSlot.getRoom().id()));
+                if (aiSlot.getTimeslot() != null) {
+                    dbSlot.setDayOfWeek(aiSlot.getTimeslot().dayOfWeek());
+                    // getReferenceById prevents N+1 SELECT queries during this mapping phase!
+                    dbSlot.setClassPeriod(periodRepo.getReferenceById(aiSlot.getTimeslot().classPeriodId()));
+                }
+
+                if (aiSlot.getRoom() != null) {
+                    dbSlot.setRoom(roomRepo.getReferenceById(aiSlot.getRoom().id()));
+                }
+
                 dbSlot.setSession(sessionRepo.getReferenceById(sessionFact.id()));
                 dbSlot.setSubject(subjectRepo.getReferenceById(aiSlot.getSubject().id()));
                 dbSlot.setRequiresLab(aiSlot.getRequiresLab());
@@ -384,6 +296,25 @@ public class TimefoldSolverService {
     @Transactional
     public void wipePublishedBySession(Integer sessionId) {
         slotRepo.deletePublishedBySessionId(sessionId);
+    }
+
+    public List<TimetableSlotResponseDTO> getUnassignedSlots(Integer sessionId) {
+        return slotRepo.getUnassignedSlots(sessionId).stream()
+                .map(s -> new TimetableSlotResponseDTO(
+                        s.getId(),
+                        s.getDayOfWeek(),
+                        null,
+                        s.getSubject().getId(),
+                        s.getSubject().getSubjectCode(),
+                        s.getSubject().getName(),
+                        s.getSubject().getSubjectType(),
+                        s.getRequiresLab(),
+                        s.getTeacher().getId(),
+                        s.getTeacher().getName(),
+                        null,
+                        null,
+                        s.getStatus()
+                )).toList();
     }
 
 }

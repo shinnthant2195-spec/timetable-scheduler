@@ -139,5 +139,15 @@ public class TimetableController {
         return ResponseEntity.ok(Map.of("message", "Linked block successfully moved to the Holding Dock."));
     }
 
+    @GetMapping("/unassigned-slots/{sessionId}")
+    public ResponseEntity<List<TimetableSlotResponseDTO>> getUnassignedSlots(@PathVariable("sessionId") Integer sessionId) {
+        return ResponseEntity.ok(solverService.getUnassignedSlots(sessionId));
+    }
+
+    @PostMapping("/populate/all")
+    public ResponseEntity<Map<String, String>> populateUnassignedSlots(@RequestBody GenerationRequestDTO request) {
+        solverService.populateUnassignedSlots(request.excludedTeacherIds());
+        return ResponseEntity.ok(Map.of("message", "All unassigned slot populated successfully."));
+    }
 
 }
