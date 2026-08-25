@@ -1,0 +1,65 @@
+
+.why-we-do-container {
+    font-family: 'Inter', sans-serif;
+    /* Added 48px to the left and right to push the text inward */
+    padding: 10px 48px; 
+}
+
+/* Center the main heading to match the reference image */
+.why-we-do-title {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 32px;
+    color: #111827;
+    font-size: 22px; 
+}
+
+/* The Flexbox container that holds the two columns */
+.why-columns {
+    display: flex;
+    gap: 48px; /* The space between the left and right columns */
+    align-items: flex-start;
+}
+
+/* Make both columns take up exactly 50% of the space */
+.why-column {
+    flex: 1;
+}
+
+/* Text styling */
+.why-column p {
+    color: #4B5563;
+    line-height: 1.8;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 15px;
+    text-align: justify;
+}
+
+/* Bullet list styling to match the reference */
+.why-column ul {
+    color: #4B5563;
+    line-height: 1.8;
+    font-size: 15px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-left: 24px; 
+}
+
+.why-column ul li {
+    margin-bottom: 8px;
+}
+
+/* Removes empty gaps at the bottom of the columns */
+.why-column p:last-child,
+.why-column ul:last-child {
+    margin-bottom: 0;
+}
+
+/* Responsive Design: Stacks into 1 column on smaller screens */
+@media (max-width: 768px) {
+    .why-columns {
+        flex-direction: column;
+        gap: 24px;
+    }
+}

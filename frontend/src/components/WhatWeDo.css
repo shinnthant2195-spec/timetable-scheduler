@@ -1,0 +1,81 @@
+.what-we-do-container {
+    font-family: 'Inter', sans-serif;
+    padding: 10px 48px; /* Perfectly matches the margins from Why We Do */
+}
+
+.what-we-do-container h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #111827;
+    font-size: 22px;
+    text-align: center;
+}
+
+/* By adding the container name in front, we force this rule to win */
+.what-we-do-container .what-intro {
+    color: #4B5563;
+    line-height: 1.8;
+    font-size: 15px;
+    text-align: center;
+    margin-bottom: 70px; 
+}
+
+/* Flexbox for the 3 columns */
+.steps-container {
+    display: flex;
+    gap: 24px;
+    align-items: stretch;
+}
+
+/* Styling for each individual step box */
+.step-box {
+    flex: 1;
+    background-color: #F9FAFB; /* Very light gray */
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Small pop-up effect when you hover over a box */
+.step-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* The purple circle for the numbers */
+.step-number {
+    background-color: #8A33C9;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 0 auto 16px auto;
+}
+
+.step-box h4 {
+    color: #111827;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+.step-box p {
+    color: #4B5563;
+    line-height: 1.6;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Responsive: stacks them on top of each other on mobile phones */
+@media (max-width: 768px) {
+    .steps-container {
+        flex-direction: column;
+    }
+}
