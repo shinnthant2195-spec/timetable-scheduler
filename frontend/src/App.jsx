@@ -1,7 +1,7 @@
 // src/App.jsx
 import { useState } from 'react';
 import Layout from './components/Layout';
-import ConstraintExplanation from './components/ConstraintExplanation';
+import Home from './Home'; // <-- 1. Import your new Home component here
 import TeacherList from './TeacherList';
 import TeacherRegistration from './TeacherRegistration';
 import TeacherEditForm from './TeacherEditForm';
@@ -12,14 +12,13 @@ function App() {
     const [activePage, setActivePage] = useState('home');
     const [editingTeacherId, setEditingTeacherId] = useState(null);
 
-    // NEW: Lifted states for Focus Mode and Holding Dock visibility
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isDockOpen, setIsDockOpen] = useState(false);
 
     const renderContent = () => {
         switch(activePage) {
             case 'home':
-                return <ConstraintExplanation />;
+                return <Home />; // <-- 2. Render Home here
             case 'teacher':
                 return <TeacherList
                     onAddClick={() => setActivePage('add-teacher')}
@@ -36,7 +35,7 @@ function App() {
                                 onClick={() => setActivePage('teacher')}
                                 style={{marginBottom: '16px', background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600'}}
                             >
-                                Back
+                                ← Back
                             </button>
                         </div>
                         <TeacherRegistration onComplete={() => setActivePage('teacher')} />
@@ -53,14 +52,13 @@ function App() {
             case 'university':
                 return <University />;
             case 'timetable':
-                // Pass the states down to the Timetable
                 return <Timetable
                     isDockOpen={isDockOpen}
                     setIsDockOpen={setIsDockOpen}
                     setIsFocusMode={setIsFocusMode}
                 />;
             default:
-                return <ConstraintExplanation />;
+                return <Home />; // <-- 3. Render Home here as default too
         }
     };
 

@@ -1,0 +1,101 @@
+.about-us-container {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Introduction Section */
+.about-intro {
+    text-align: center;
+    margin-bottom: 48px;
+    padding: 0 20px;
+}
+
+.about-intro h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #111827;
+    font-size: 24px;
+}
+
+.about-intro p {
+    color: #4B5563;
+    line-height: 1.8;
+    font-size: 16px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Alternating Team Rows */
+.team-row {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 40px;
+}
+
+/* Removes the line under the very last profile */
+.team-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Text Section */
+.team-text {
+    flex: 1;
+}
+
+.team-text h4 {
+    color: #111827;
+    font-size: 22px;
+    margin: 0 0 8px 0;
+}
+
+.role-badge {
+    display: inline-block;
+    background-color: #F3E8FF;
+    color: #8A33C9;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.team-text p {
+    color: #4B5563;
+    line-height: 1.8;
+    margin: 0;
+    font-size: 15px;
+    text-align: justify;
+}
+
+/* Image Section */
+.team-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.profile-pic {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%; /* Makes the image a perfect circle */
+    object-fit: cover; /* Ensures the image isn't stretched */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    background-color: #E5E7EB; 
+}
+
+/* Responsive: Stacks vertically on small screens */
+@media (max-width: 768px) {
+    .team-row {
+        flex-direction: column !important;
+        text-align: center;
+        gap: 24px;
+    }
+    
+    .team-text p {
+        text-align: center;
+    }
+}

@@ -1,5 +1,5 @@
 // src/components/Layout.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import './Layout.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -17,8 +17,7 @@ import profileImage from '../assets/photo_2026-08-08_14-52-47.jpg';
 import logoImage from "../assets/nspu logo.png";
 
 function Layout({ activePage, setActivePage, children, onLogout, username = "Guest User", isFocusMode, setIsFocusMode }) {
-    const [isMembersOpen, setIsMembersOpen] = useState(false);
-
+    
     return (
         <div className="layout-container">
             {/* Sidebar - Added dynamic collapsed class */}
@@ -63,28 +62,10 @@ function Layout({ activePage, setActivePage, children, onLogout, username = "Gue
                 </div>
 
                 <div className="sidebar-footer">
-                    {isMembersOpen && !isFocusMode && (
-                        <ul className="members-popup">
-                            <li>Shinn Thant</li>
-                            <li>Kent Linn Naung</li>
-                        </ul>
-                    )}
-
-                    {/* Focus Mode Toggle */}
-                    <button className="members-btn focus-btn" onClick={() => setIsFocusMode(!isFocusMode)} style={{ marginBottom: '12px' }}>
+                    {/* Focus Mode Toggle Only */}
+                    <button className="members-btn focus-btn" onClick={() => setIsFocusMode(!isFocusMode)}>
                         <FontAwesomeIcon icon={isFocusMode ? faMinimize : faMaximize} className="btn-icon" />
                         <span className="nav-text">Focus Mode</span>
-                    </button>
-
-                    <button className="members-btn" onClick={() => setIsMembersOpen(!isMembersOpen)}>
-                        <svg
-                            className={`arrow-icon ${isMembersOpen ? 'open' : ''}`}
-                            width="14" height="14" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
-                        >
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                        <span className="nav-text">Members</span>
                     </button>
                 </div>
             </aside>
