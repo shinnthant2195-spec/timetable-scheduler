@@ -43,7 +43,7 @@ public class TimetableFactory {
             for (DayOfWeek day : days) {
 
                 // Search Space Pruning to skip WEDNESDAY Afternoon for Extra Curricular
-                if (day == DayOfWeek.WEDNESDAY && period.getStartTime().isBefore(lunchEndTime)) {
+                if (day == DayOfWeek.WEDNESDAY && !period.getStartTime().isBefore(lunchEndTime)) {
                     continue;
                 }
                 timeslotFacts.add(new TimeslotFact(
@@ -53,8 +53,8 @@ public class TimetableFactory {
                         index,
                         period.getStartTime().isBefore(lunchEndTime)
                 ));
-                index++;
             }
+            index++;
         }
         return  timeslotFacts;
     }
@@ -63,9 +63,10 @@ public class TimetableFactory {
     public TimetableSchedule populateTimeslots(List<String> excludedTeacherIds) {
 
         List<Session> sessions = sessionRepo.findAll(); // Pass
-        List<ClassPeriod> periods = periodRepo.findAll(); // Pass
+        List<ClassPeriod> periods = periodRepo.findAll().stream()
+                .filter(p -> p.getType() == ClassPeriod.PeriodType.LECTURE)
+                .toList(); // Pass
 
-        // Forget to Filter LECTURE periods
         List<DayOfWeek> days = List.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
 
         // Find Lunch End Time for Search Space Pruning (leaving WED Evening)
