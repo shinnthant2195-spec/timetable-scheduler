@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # 1. Your MySQL Database Container
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: 323978
+      MYSQL_DATABASE: timetable_scheduler
+    ports:
+      - "3306:3306"
+    volumes:
+      # This ensures your database data isn't deleted when the container restarts
+      - mysql_data:/var/lib/mysql
+
+  # 2. Your Spring Boot Backend Container
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # This overrides the localhost URL in your application.properties
+      # so it points to the "db" container we created above.
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/timetable_scheduler
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=323978
+
+      # Note: Spring Boot will automatically read your Supabase keys and
+      # Multipart upload limits directly from your application.properties file!
+    depends_on:
+      - db
+
+  # 3. Your React Frontend Container
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
