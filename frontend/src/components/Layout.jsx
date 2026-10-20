@@ -13,7 +13,7 @@ import {
     faMinimize
 } from '@fortawesome/free-solid-svg-icons';
 
-import profileImage from '../assets/photo_2026-08-08_14-52-47.jpg';
+import profileImage from '../assets/admin.jpg';
 import logoImage from "../assets/nspu logo.png";
 
 function Layout({ activePage, setActivePage, children, onLogout, username = "Guest User", isFocusMode, setIsFocusMode }) {
