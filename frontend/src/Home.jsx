@@ -27,9 +27,7 @@ export default function Home() {
                 
                 <div className="explanation-hero right-box">
                     <p>
-                        Timefold AI ကို အသုံးပြု၍ 
-                        ဆရာ၊ ကျောင်းသား နှင့် အခန်းများ၏ လိုအပ်ချက်များကို အကောင်းဆုံး တွက်ချက်ကာ 
-                        အမှားအယွင်းကင်းသော အချိန်ဇယားများကို အလိုအလျောက် ရေးဆွဲပေးပါသည်။
+                        Leveraging Timefold AI, the system automatically generates conflict-free timetables by optimally balancing the requirements of faculty, students, and classroom facilities
                     </p>
                 </div>
             </div>
